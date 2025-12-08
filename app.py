@@ -1,17 +1,53 @@
 import json
 from typing import Any, Dict, List
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
+import requests
 
 st.set_page_config(page_title="Route Dashboard", layout="wide")
+API_BASE_URL = "http://localhost:8000"
 
 if "entered" not in st.session_state:
     st.session_state.entered = False
+if "recommendations" not in st.session_state:
+    st.session_state.recommendations: List[Dict[str, Any]] = []
+if "gpx_recommendations" not in st.session_state:
+    st.session_state.gpx_recommendations: List[Dict[str, Any]] = []
 
 st.markdown(
     """
     <style>
+    .faf-logo {
+        position: fixed;
+        top: 16px;
+        left: 24px;
+        font-family: "Impact", "Anton", "Arial Black", sans-serif;
+        font-size: 44px;
+        font-style: italic;
+        font-weight: 900;
+        letter-spacing: 1px;
+        color: #0f1116;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        z-index: 9999;
+    }
+    /* Match number input height with uploader */
+    div[data-testid="stNumberInput"] {
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    header[data-testid="stHeader"] {
+        background: transparent;
+        box-shadow: none;
+    }
+    header[data-testid="stHeader"] > div {
+        background: transparent;
+    }
     .hero {
         background: linear-gradient(180deg, #e8c8c8 0%, #c77874 100%);
         padding: 140px 32px;
@@ -48,6 +84,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+st.markdown('<div class="faf-logo">FAF</div>', unsafe_allow_html=True)
+
 if not st.session_state.entered:
     st.markdown(
         """
@@ -80,63 +118,19 @@ default_features = {
         "Gravel_Tracks": 0.1,
         "Paved_Paths": 0.3,
         "Other": 0.05,
-        "Unknown_Surface": 0.0,
+        "Unknown Surface": 0.0,
         "Paved_Road": 0.4,
         "Pedestrian": 0.0,
         "Unknown_Way": 0.0,
-        "Cycle_Track": 0.15,
+        "Cycle Track": 0.15,
+        "Main Road": 0.0,
+        "Steep Section": 0.0,
+        "Moderate Section": 0.0,
+        "Flat Section": 0.0,
+        "Downhill Section": 0.0,
+        "Steep Downhill Section": 0.0,
     }
 }
-
-# Placeholder recommendations copied from the API response body screenshot.
-recommendations_sample: List[Dict[str, Any]] = [
-    {
-        "route_id": 14349467,
-        "route_name": "Ciclovia Pedemontana Alpina",
-        "distance_m": 89292.3,
-        "ascent_m": 1354,
-        "duration_s": 18702.4,
-        "turn_density": 2.01585130807315,
-        "similarity_score": 0.0349585319495986,
-    },
-    {
-        "route_id": 16478126,
-        "route_name": "Dal Lago di Garda a Venezia (Alternative, escursioni e collegamenti)",
-        "distance_m": 156841.6,
-        "ascent_m": 1554.8,
-        "duration_s": 32059.8,
-        "turn_density": 1.6449717421908474,
-        "similarity_score": 0.0379780633594286,
-    },
-    {
-        "route_id": 12688705,
-        "route_name": "Unnamed route",
-        "distance_m": 106648.6,
-        "ascent_m": 1012.4,
-        "duration_s": 21740.6,
-        "turn_density": 1.622215331102909,
-        "similarity_score": 0.0321011709186368,
-    },
-    {
-        "route_id": 9876543,
-        "route_name": "Scenic River Loop",
-        "distance_m": 45678.0,
-        "ascent_m": 780.0,
-        "duration_s": 13200.0,
-        "turn_density": 1.1,
-        "similarity_score": 0.028,
-    },
-    {
-        "route_id": 1928374,
-        "route_name": "Coastal Explorer",
-        "distance_m": 80200.5,
-        "ascent_m": 930.2,
-        "duration_s": 16840.3,
-        "turn_density": 1.42,
-        "similarity_score": 0.0314,
-    },
-]
-
 
 def format_duration(seconds: float) -> str:
     minutes, sec = divmod(int(seconds), 60)
@@ -151,15 +145,74 @@ def format_duration(seconds: float) -> str:
     return " ".join(parts)
 
 
+def upload_gpx_to_api(file) -> tuple[bool, str, Dict[str, Any] | None]:
+    files = {"file": (file.name, file.getvalue(), "application/gpx+xml")}
+    try:
+        resp = requests.post(f"{API_BASE_URL}/recommend-from-gpx", files=files, timeout=30)
+    except Exception as exc:  # noqa: BLE001
+        return False, f"Request failed: {exc}", None
+
+    if resp.status_code != 200:
+        try:
+            detail = resp.json().get("detail")
+        except Exception:  # noqa: BLE001
+            detail = resp.text
+        return False, f"API error {resp.status_code}: {detail}", None
+
+    try:
+        data = resp.json()
+    except Exception:  # noqa: BLE001
+        return False, "Invalid JSON response from API.", None
+
+    if not isinstance(data, list):
+        return False, "Unexpected response format from API.", None
+
+    return True, "Recommendations ready.", data
+
+
+def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, str, List[Dict[str, Any]] | None]:
+    payload = {"features": features, "n_recommendations": n_recs}
+    try:
+        resp = requests.post(f"{API_BASE_URL}/recommend", json=payload, timeout=30)
+    except Exception as exc:  # noqa: BLE001
+        return False, f"Request failed: {exc}", None
+
+    if resp.status_code != 200:
+        try:
+            detail = resp.json().get("detail")
+        except Exception:  # noqa: BLE001
+            detail = resp.text
+        return False, f"API error {resp.status_code}: {detail}", None
+
+    try:
+        data = resp.json()
+    except Exception:  # noqa: BLE001
+        return False, "Invalid JSON response from API.", None
+
+    if not isinstance(data, list):
+        return False, "Unexpected response format from API.", None
+
+    return True, "Recommendations loaded.", data
+
+
 header = st.container()
 with header:
-    route_col, count_col, action_col = st.columns([3, 1, 1])
-    raw_features = route_col.text_area(
-        "Enter route (JSON request body)",
-        value=json.dumps(default_features, indent=2),
-        height=220,
-        help="Paste the features JSON you send to /recommend.",
+    route_col, count_col = st.columns(2)
+    uploaded_gpx = route_col.file_uploader(
+        "Upload a GPX file",
+        type=["gpx"],
+        help="Choose a .gpx file to send to the backend.",
     )
+    if uploaded_gpx:
+        st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
+        if st.button("Send GPX to backend", use_container_width=True):
+            ok, msg, data = upload_gpx_to_api(uploaded_gpx)
+            if ok:
+                st.success(msg)
+                st.session_state.gpx_recommendations = data
+            else:
+                st.error(msg)
+
     n_recs = count_col.number_input(
         "Number of recommendations",
         min_value=1,
@@ -167,27 +220,24 @@ with header:
         value=5,
         step=1,
     )
-    run_query = action_col.button("Get recommendations", use_container_width=True)
+    if st.button("Get recommendations", use_container_width=True):
+        ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
+        if ok and data is not None:
+            st.session_state.recommendations = data
+            st.success(msg)
+        else:
+            st.error(msg)
 
 st.divider()
-
-# Normally you would POST raw_features to the API; here we use the sample data.
-parsed_features: Dict[str, Any] | None = None
-if run_query:
-    try:
-        parsed_features = json.loads(raw_features)
-        st.success("Parsed features JSON. (Sample data shown below.)")
-    except json.JSONDecodeError as exc:
-        st.error(f"Invalid JSON: {exc}")
 
 sidebar, map_area = st.columns([1, 2], gap="large")
 
 with sidebar:
     st.subheader("Recommended Routes")
-    route_names = [rec["route_name"] for rec in recommendations_sample][: n_recs or 5]
+    route_names = [rec["route_name"] for rec in st.session_state.recommendations][: n_recs or 5]
     selected_route = st.selectbox("Route", route_names, index=0 if route_names else None)
 
-    selected = next((rec for rec in recommendations_sample if rec["route_name"] == selected_route), None)
+    selected = next((rec for rec in st.session_state.recommendations if rec["route_name"] == selected_route), None)
 
     st.subheader("KPIs")
     if selected:
@@ -215,5 +265,5 @@ with map_area:
         st.caption("Select a route to label the map view.")
 
 st.divider()
-with st.expander("Raw recommendations (sample)"):
-    st.json(recommendations_sample)
+with st.expander("Raw recommendations"):
+    st.json(st.session_state.recommendations or {"info": "No recommendations fetched yet."})
