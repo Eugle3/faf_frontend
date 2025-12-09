@@ -575,14 +575,16 @@ with header:
         step=1,
     )
 
-# Full-width "GET YOUR RECOMMENDATIONS" button
-if st.button("GET YOUR RECOMMENDATIONS", use_container_width=True, type="primary"):
-    ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
-    if ok and data is not None:
-        st.session_state.recommendations = data
-        st.success(msg)
-    else:
-        st.error(msg)
+# Centered "GET YOUR RECOMMENDATIONS" button
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("GET YOUR RECOMMENDATIONS", use_container_width=True, type="primary"):
+        ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
+        if ok and data is not None:
+            st.session_state.recommendations = data
+            st.success(msg)
+        else:
+            st.error(msg)
 
 st.divider()
 
