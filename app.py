@@ -238,7 +238,7 @@ if not st.session_state.entered:
 
     # Hero Image - Full Width Below
     st.markdown('<div class="hero-image-section">', unsafe_allow_html=True)
-    st.image("assets/hero-cyclist.jpg", use_container_width=True)
+    st.image("assets/marin-journal-piece-lead-2-1920x900.jpg", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Enter Button - Below Image
