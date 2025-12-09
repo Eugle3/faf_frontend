@@ -203,22 +203,30 @@ st.markdown(
         border-left: 4px solid #B06CFF;
     }
 
-    /* Align upload and number input to same height and size */
+    /* Make all three sections equal size */
     div[data-testid="stFileUploader"],
-    div[data-testid="stNumberInput"] {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
+    div[data-testid="stNumberInput"],
+    div[data-testid="stButton"] {
+        height: 140px !important;
     }
 
-    /* Make the inner containers the same height */
-    div[data-testid="stFileUploader"] section,
-    div[data-testid="stNumberInput"] > div > div {
-        min-height: 100px !important;
+    /* File uploader styling */
+    div[data-testid="stFileUploader"] section {
         height: 100px !important;
+        min-height: 100px !important;
+    }
+    div[data-testid="stFileUploader"] section > div {
+        height: 100px !important;
+        min-height: 100px !important;
     }
 
-    /* Labels styling */
+    /* Number input styling */
+    div[data-testid="stNumberInput"] > div > div {
+        height: 100px !important;
+        min-height: 100px !important;
+    }
+
+    /* Labels styling - same for both */
     div[data-testid="stFileUploader"] label,
     div[data-testid="stNumberInput"] label {
         font-weight: 800 !important;
@@ -234,11 +242,6 @@ st.markdown(
         width: 32px !important;
         min-width: 32px !important;
         padding: 4px !important;
-    }
-
-    /* Fix the file uploader height */
-    div[data-testid="stFileUploader"] section > div {
-        min-height: 100px !important;
     }
 
     /* Button Styling - Match Input Height */
@@ -555,8 +558,8 @@ def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, 
 
 header = st.container()
 with header:
-    # Create 3 columns: upload, number input, button
-    upload_col, count_col, button_col = st.columns([2, 2, 2])
+    # Create 3 equal columns
+    upload_col, count_col, button_col = st.columns(3)
 
     with upload_col:
         uploaded_gpx = st.file_uploader(
