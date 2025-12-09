@@ -184,25 +184,57 @@ st.markdown(
         border-left: 4px solid #B06CFF;
     }
 
-    /* Match input heights */
+    /* Align upload and number input heights */
+    div[data-testid="stFileUploader"] {
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
     div[data-testid="stNumberInput"] {
         min-height: 150px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
     }
 
-    /* Button Styling */
+    /* Button Styling - Bigger and Bolder */
     .stButton > button {
         border-radius: 10px;
-        font-weight: 600;
+        font-weight: 700;
         transition: all 0.3s ease;
-        font-size: 16px !important;
-        padding: 12px 32px !important;
+        font-size: 18px !important;
+        padding: 16px 36px !important;
+        min-height: 56px;
     }
     .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(176, 108, 255, 0.3);
+    }
+
+    /* Map Rounded Corners */
+    [data-testid="stMap"] {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    [data-testid="stMap"] > div {
+        border-radius: 16px;
+    }
+
+    /* Expander Styling */
+    [data-testid="stExpander"] {
+        border-radius: 12px;
+        border: 2px solid #B06CFF;
+        background: white;
+    }
+    [data-testid="stExpander"] summary {
+        font-weight: 700;
+        font-size: 18px;
+        padding: 16px 20px;
+        color: #B06CFF;
+    }
+    [data-testid="stExpander"] summary:hover {
+        color: #FF5C7A;
     }
 
     /* Dividers */
@@ -436,7 +468,7 @@ with header:
     )
     if uploaded_gpx:
         st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
-        if st.button("Send GPX to backend", use_container_width=True):
+        if st.button("Send GPX to backend", use_container_width=True, type="primary"):
             ok, msg, data = upload_gpx_to_api(uploaded_gpx)
             if ok:
                 st.success(msg)
@@ -451,7 +483,7 @@ with header:
         value=5,
         step=1,
     )
-    if st.button("Get recommendations", use_container_width=True):
+    if st.button("Get recommendations", use_container_width=True, type="primary"):
         ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
         if ok and data is not None:
             st.session_state.recommendations = data
