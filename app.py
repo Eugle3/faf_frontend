@@ -172,27 +172,35 @@ st.markdown(
         font-weight: 400;
     }
 
-    /* Dashboard Section Headers */
+    /* Dashboard Section Headers - Subtitle level */
     .section-header {
         background: #B06CFF;
         color: white;
         padding: 18px 28px;
         border-radius: 12px;
-        margin-bottom: 28px;
+        margin-bottom: 24px;
         font-weight: 800;
-        font-size: 20px;
-        letter-spacing: 0.3px;
+        font-size: 18px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
     .section-header-green {
         background: #4F6844;
         color: white;
         padding: 18px 28px;
         border-radius: 12px;
-        margin-bottom: 28px;
+        margin-bottom: 24px;
         font-weight: 800;
-        font-size: 20px;
-        letter-spacing: 0.3px;
+        font-size: 18px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
+
+    /* Typography Hierarchy Summary:
+       - Big Title (42px): ROUTE RECOMMENDATIONS
+       - Subtitle (16-18px, uppercase, bold): Section headers, labels, buttons
+       - Body Text (14px, normal): Descriptive text, inputs
+    */
 
     /* Card Styling */
     div[data-testid="stMetric"] {
@@ -226,15 +234,23 @@ st.markdown(
         min-height: 100px !important;
     }
 
-    /* Labels styling - same for both */
+    /* Subtitle styling - Upload and Number labels */
     div[data-testid="stFileUploader"] label,
     div[data-testid="stNumberInput"] label {
         font-weight: 800 !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
         color: #0F1826 !important;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px !important;
+        letter-spacing: 1px;
+        margin-bottom: 12px !important;
+    }
+
+    /* Body text styling - smaller descriptive text */
+    div[data-testid="stFileUploader"] section small,
+    div[data-testid="stFileUploader"] section p {
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        color: #666666 !important;
     }
 
     /* Make number input controls thinner */
@@ -244,17 +260,17 @@ st.markdown(
         padding: 4px !important;
     }
 
-    /* Button Styling - Match Input Height */
+    /* Button Styling - Subtitle level action */
     .stButton > button {
         border-radius: 10px;
         font-weight: 900 !important;
         transition: all 0.3s ease;
-        font-size: 18px !important;
+        font-size: 16px !important;
         padding: 0 24px !important;
         height: 100px !important;
         min-height: 100px !important;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -364,10 +380,16 @@ st.markdown(
             color: #FFFFFF !important;
         }
 
-        /* Labels in dark mode */
+        /* Labels (subtitles) in dark mode */
         div[data-testid="stFileUploader"] label,
         div[data-testid="stNumberInput"] label {
             color: #FFFFFF !important;
+        }
+
+        /* Body text in dark mode */
+        div[data-testid="stFileUploader"] section small,
+        div[data-testid="stFileUploader"] section p {
+            color: #C8C9CE !important;
         }
     }
     </style>
@@ -606,7 +628,7 @@ with sidebar:
 
     selected = next((rec for rec in st.session_state.recommendations if rec["route_name"] == selected_route), None)
 
-    st.markdown('<div style="font-size: 20px; font-weight: 800; margin: 24px 0 16px 0; color: #0F1826;">Route Metrics</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size: 18px; font-weight: 800; margin: 24px 0 16px 0; color: #0F1826; text-transform: uppercase; letter-spacing: 1px;">Route Metrics</div>', unsafe_allow_html=True)
     if selected:
         st.metric("Distance (m)", f"{selected['distance_m']:.0f}")
         st.metric("Ascent (m)", f"{selected['ascent_m']:.0f}")
