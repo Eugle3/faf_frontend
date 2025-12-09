@@ -203,38 +203,42 @@ st.markdown(
         border-left: 4px solid #B06CFF;
     }
 
-    /* Align upload and number input heights */
-    div[data-testid="stFileUploader"] {
-        height: 140px;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-    }
-    div[data-testid="stFileUploader"] > div {
-        height: 100%;
-    }
-    div[data-testid="stFileUploader"] label {
-        font-weight: 800 !important;
-        font-size: 18px !important;
-        color: #0F1826 !important;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+    /* Align upload and number input to same height and size */
+    div[data-testid="stFileUploader"],
     div[data-testid="stNumberInput"] {
-        height: 140px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
     }
-    div[data-testid="stNumberInput"] > div {
-        height: 100%;
+
+    /* Make the inner containers the same height */
+    div[data-testid="stFileUploader"] section,
+    div[data-testid="stNumberInput"] > div > div {
+        min-height: 100px !important;
+        height: 100px !important;
     }
+
+    /* Labels styling */
+    div[data-testid="stFileUploader"] label,
     div[data-testid="stNumberInput"] label {
         font-weight: 800 !important;
         font-size: 18px !important;
         color: #0F1826 !important;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        margin-bottom: 8px !important;
+    }
+
+    /* Make number input controls thinner */
+    div[data-testid="stNumberInput"] button {
+        width: 32px !important;
+        min-width: 32px !important;
+        padding: 4px !important;
+    }
+
+    /* Fix the file uploader height */
+    div[data-testid="stFileUploader"] section > div {
+        min-height: 100px !important;
     }
 
     /* Button Styling - Compact and Bold */
