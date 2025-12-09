@@ -46,16 +46,17 @@ st.markdown(
         background: transparent;
     }
 
-    /* Hero Section - Modern Design */
+    /* Hero Section - Rapha-inspired Design */
     .hero {
-        background: linear-gradient(135deg, #B06CFF 0%, #FF5C7A 100%);
-        padding: 160px 40px 120px;
-        text-align: center;
+        background: #FFFFFF;
+        padding: 0;
         margin-bottom: 0;
         width: 100vw;
         margin-left: calc(-50vw + 50%);
         position: relative;
         overflow: hidden;
+        height: 85vh;
+        min-height: 600px;
     }
     .hero::before {
         content: '';
@@ -64,80 +65,98 @@ st.markdown(
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=1600') center/cover;
-        opacity: 0.15;
+        background: url('https://images.unsplash.com/photo-1517649763962-0c623066013b?w=2000') right center/cover;
         z-index: 0;
+    }
+    .hero::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.3) 60%, transparent 100%);
+        z-index: 1;
     }
     .hero-content {
         position: relative;
-        z-index: 1;
+        z-index: 2;
+        padding: 180px 60px;
+        max-width: 650px;
     }
     .hero h1 {
-        font-size: 120px;
+        font-size: 110px;
         font-weight: 900;
         letter-spacing: -4px;
         margin: 0;
-        color: #FFFFFF;
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        color: #0F1826;
         font-family: "Impact", "Arial Black", sans-serif;
+        line-height: 0.95;
+        text-transform: uppercase;
     }
     .hero h2 {
-        font-size: 32px;
-        font-weight: 600;
-        margin-top: 20px;
-        margin-bottom: 16px;
-        color: #FFFFFF;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        font-size: 26px;
+        font-weight: 400;
+        margin-top: 24px;
+        margin-bottom: 40px;
+        color: #0F1826;
+        font-style: italic;
+        letter-spacing: 0.5px;
     }
     .hero p {
-        font-size: 18px;
-        color: rgba(255, 255, 255, 0.95);
-        max-width: 600px;
-        margin: 0 auto 40px;
-        line-height: 1.6;
+        font-size: 16px;
+        color: #4F6844;
+        max-width: 480px;
+        margin: 0 0 32px 0;
+        line-height: 1.7;
     }
 
-    /* Feature Cards Section */
+    /* Feature Cards Section - Minimal Design */
     .features-section {
-        background: #F5F5F7;
-        padding: 80px 40px;
+        background: #FFFFFF;
+        padding: 100px 40px;
         width: 100vw;
         margin-left: calc(-50vw + 50%);
-        margin-bottom: 40px;
+        margin-bottom: 60px;
+        border-top: 1px solid #E5E5E5;
     }
     .features-title {
         text-align: center;
-        font-size: 42px;
-        font-weight: 800;
+        font-size: 36px;
+        font-weight: 700;
         color: #0F1826;
-        margin-bottom: 50px;
+        margin-bottom: 70px;
+        letter-spacing: -1px;
     }
     .feature-card {
-        background: white;
-        padding: 32px;
-        border-radius: 16px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        background: transparent;
+        padding: 24px 16px;
+        border-radius: 0;
         margin-bottom: 20px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.2s ease;
     }
     .feature-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(176, 108, 255, 0.15);
+        transform: translateY(-2px);
     }
     .feature-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
+        font-size: 36px;
+        margin-bottom: 20px;
+        opacity: 0.8;
     }
     .feature-title {
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 700;
         color: #0F1826;
         margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 14px;
     }
     .feature-desc {
         font-size: 15px;
-        color: #4F6844;
-        line-height: 1.6;
+        color: #666666;
+        line-height: 1.7;
+        font-weight: 400;
     }
 
     /* Dashboard Section Headers */
@@ -168,11 +187,31 @@ st.markdown(
         justify-content: center;
     }
 
+    /* Hero CTA Links */
+    .hero-cta {
+        display: inline-flex;
+        gap: 32px;
+        margin-top: 16px;
+    }
+    .hero-cta a {
+        text-decoration: underline;
+        color: #0F1826;
+        font-weight: 600;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        transition: color 0.2s ease;
+    }
+    .hero-cta a:hover {
+        color: #B06CFF;
+    }
+
     /* Button Styling */
     .stButton > button {
         border-radius: 10px;
         font-weight: 600;
         transition: all 0.3s ease;
+        font-size: 16px !important;
+        padding: 12px 32px !important;
     }
     .stButton > button:hover {
         transform: translateY(-2px);
@@ -200,18 +239,23 @@ if not st.session_state.entered:
         <div class="hero">
             <div class="hero-content">
                 <h1>FAF</h1>
-                <h2>Fast As Fuck</h2>
-                <p>Discover epic cycling routes powered by AI. Find scenic paths, challenging climbs, and hidden gems tailored to your riding style.</p>
+                <h2>Discover your next ride.</h2>
+                <p>AI-powered route recommendations for cyclists who crave adventure. Find scenic paths, epic climbs, and hidden roads that match your style.</p>
+                <div class="hero-cta">
+                    <a href="#discover">Start exploring</a>
+                    <a href="#how">How it works</a>
+                </div>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # CTA Button
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # CTA Button - clean and centered
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        if st.button("🚴 Start Discovering Routes", use_container_width=True, type="primary"):
+        if st.button("Enter Dashboard", use_container_width=True, type="primary"):
             st.session_state.entered = True
             st.rerun()
 
@@ -219,7 +263,7 @@ if not st.session_state.entered:
     st.markdown(
         """
         <div class="features-section">
-            <div class="features-title">How It Works</div>
+            <div class="features-title">Ride smarter, explore further</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -231,9 +275,9 @@ if not st.session_state.entered:
         st.markdown(
             """
             <div class="feature-card">
-                <div class="feature-icon">🗺️</div>
-                <div class="feature-title">Upload or Describe</div>
-                <div class="feature-desc">Share your favorite GPX file or describe your ideal ride preferences.</div>
+                <div class="feature-icon">📍</div>
+                <div class="feature-title">Your Preferences</div>
+                <div class="feature-desc">Upload a GPX file or specify route characteristics. Distance, elevation, terrain—tell us what you're looking for.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -243,9 +287,9 @@ if not st.session_state.entered:
         st.markdown(
             """
             <div class="feature-card">
-                <div class="feature-icon">🤖</div>
-                <div class="feature-title">AI-Powered Matching</div>
-                <div class="feature-desc">Our algorithm finds routes with similar terrain, distance, and scenic quality.</div>
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Smart Matching</div>
+                <div class="feature-desc">Our AI analyzes thousands of routes to find perfect matches based on your riding style and preferences.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -255,9 +299,9 @@ if not st.session_state.entered:
         st.markdown(
             """
             <div class="feature-card">
-                <div class="feature-icon">🚴</div>
-                <div class="feature-title">Ride & Enjoy</div>
-                <div class="feature-desc">Get personalized recommendations and explore new cycling adventures.</div>
+                <div class="feature-icon">🌄</div>
+                <div class="feature-title">Discover Routes</div>
+                <div class="feature-desc">Get curated recommendations with detailed metrics, maps, and insights to plan your next ride.</div>
             </div>
             """,
             unsafe_allow_html=True,
