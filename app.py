@@ -148,7 +148,8 @@ def format_duration(seconds: float) -> str:
 def upload_gpx_to_api(file) -> tuple[bool, str, Dict[str, Any] | None]:
     files = {"file": (file.name, file.getvalue(), "application/gpx+xml")}
     try:
-        resp = requests.post(f"{API_BASE_URL}/recommend-from-gpx", files=files, timeout=30)
+        # Increased timeout to 60s for ORS API call
+        resp = requests.post(f"{API_BASE_URL}/recommend-from-gpx", files=files, timeout=60)
     except Exception as exc:  # noqa: BLE001
         return False, f"Request failed: {exc}", None
 
@@ -197,55 +198,118 @@ def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, 
 
 header = st.container()
 with header:
-    route_col, count_col = st.columns(2)
-    uploaded_gpx = route_col.file_uploader(
-        "Upload a GPX file",
-        type=["gpx"],
-        help="Choose a .gpx file to send to the backend.",
-    )
-    if uploaded_gpx:
-        st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
-        if st.button("Send GPX to backend", use_container_width=True):
-            ok, msg, data = upload_gpx_to_api(uploaded_gpx)
-            if ok:
-                st.success(msg)
-                st.session_state.gpx_recommendations = data
-            else:
-                st.error(msg)
+    st.subheader("🚴 Find Similar Routes")
 
-    n_recs = count_col.number_input(
-        "Number of recommendations",
-        min_value=1,
-        max_value=10,
-        value=5,
-        step=1,
-    )
-    if st.button("Get recommendations", use_container_width=True):
-        ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
-        if ok and data is not None:
-            st.session_state.recommendations = data
-            st.success(msg)
-        else:
-            st.error(msg)
+    tab1, tab2 = st.tabs(["Upload GPX File", "Use Default Features"])
+
+    with tab1:
+        uploaded_gpx = st.file_uploader(
+            "Upload a GPX file from your bike computer or tracking app",
+            type=["gpx"],
+            help="Upload a .gpx file to find routes with similar characteristics.",
+        )
+        if uploaded_gpx:
+            st.caption(f"✓ Selected: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())/1024:.1f} KB)")
+
+            if st.button("🔍 Find Similar Routes", use_container_width=True, type="primary"):
+                with st.spinner("Processing your GPX file..."):
+                    ok, msg, data = upload_gpx_to_api(uploaded_gpx)
+                    if ok:
+                        st.success(f"✓ Found {len(data)} similar routes!")
+                        st.session_state.gpx_recommendations = data
+                        st.rerun()  # Refresh to show recommendations
+                    else:
+                        st.error(msg)
+
+        # Display GPX file details if available
+        if uploaded_gpx and st.session_state.gpx_recommendations:
+            with st.expander("📊 GPX File Details"):
+                first_rec = st.session_state.gpx_recommendations[0] if st.session_state.gpx_recommendations else None
+                if first_rec:
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Your Route Distance", f"{first_rec['distance_m']/1000:.1f} km")
+                    col2.metric("Your Route Ascent", f"{first_rec['ascent_m']:.0f} m")
+                    # Note: Primary surface type would require backend to return surface breakdown
+                    surface_type = first_rec.get('primary_surface', 'N/A')
+                    col3.metric("Primary Surface", surface_type)
+
+    with tab2:
+        n_recs = st.number_input(
+            "Number of recommendations",
+            min_value=1,
+            max_value=10,
+            value=5,
+            step=1,
+        )
+        if st.button("Get Recommendations", use_container_width=True):
+            with st.spinner("Fetching recommendations..."):
+                ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
+                if ok and data is not None:
+                    st.session_state.recommendations = data
+                    st.success(msg)
+                else:
+                    st.error(msg)
 
 st.divider()
 
 sidebar, map_area = st.columns([1, 2], gap="large")
 
 with sidebar:
+    # Let user choose which recommendation source to view
+    rec_source = st.radio(
+        "Recommendation Source",
+        ["Default Features", "Uploaded GPX"],
+        index=1 if st.session_state.gpx_recommendations else 0
+    )
+
+    # Choose which recommendations to display
+    if rec_source == "Uploaded GPX" and st.session_state.gpx_recommendations:
+        active_recs = st.session_state.gpx_recommendations
+        st.caption(f"📍 Showing {len(active_recs)} routes similar to your GPX file")
+    else:
+        active_recs = st.session_state.recommendations
+        st.caption(f"📍 Showing routes based on default features")
+
     st.subheader("Recommended Routes")
-    route_names = [rec["route_name"] for rec in st.session_state.recommendations][: n_recs or 5]
+    route_names = [rec["route_name"] for rec in active_recs][:5]
     selected_route = st.selectbox("Route", route_names, index=0 if route_names else None)
 
-    selected = next((rec for rec in st.session_state.recommendations if rec["route_name"] == selected_route), None)
+    selected = next((rec for rec in active_recs if rec["route_name"] == selected_route), None)
 
     st.subheader("KPIs")
     if selected:
-        st.metric("Distance (m)", f"{selected['distance_m']:.0f}")
-        st.metric("Ascent (m)", f"{selected['ascent_m']:.0f}")
+        st.metric("Distance", f"{selected['distance_m']/1000:.1f} km")
+        st.metric("Ascent", f"{selected['ascent_m']:.0f} m")
         st.metric("Duration", format_duration(selected["duration_s"]))
-        st.metric("Turn Density", f"{selected['turn_density']:.2f}")
+        st.metric("Turn Density", f"{selected['turn_density']:.4f}")
         st.metric("Similarity Score", f"{selected['similarity_score']:.4f}")
+
+        # Add GPX download button
+        st.divider()
+        if st.button("📥 Download GPX", use_container_width=True, type="primary"):
+            route_id = selected['route_id']
+            gpx_url = f"{API_BASE_URL}/download-gpx/{route_id}"
+
+            try:
+                response = requests.get(gpx_url, timeout=30)
+                if response.status_code == 200:
+                    # Trigger download using Streamlit's download_button
+                    st.download_button(
+                        label="💾 Click to Save GPX File",
+                        data=response.content,
+                        file_name=f"route_{route_id}.gpx",
+                        mime="application/gpx+xml",
+                        use_container_width=True
+                    )
+                    st.success("✓ GPX file ready! Click above to save.")
+                else:
+                    try:
+                        error_detail = response.json().get('detail', 'Unknown error')
+                    except Exception:  # noqa: BLE001
+                        error_detail = response.text
+                    st.error(f"Error: {error_detail}")
+            except Exception as e:  # noqa: BLE001
+                st.error(f"Failed to fetch GPX: {str(e)}")
     else:
         st.info("Select a route to view KPIs.")
 
@@ -265,5 +329,9 @@ with map_area:
         st.caption("Select a route to label the map view.")
 
 st.divider()
-with st.expander("Raw recommendations"):
-    st.json(st.session_state.recommendations or {"info": "No recommendations fetched yet."})
+with st.expander("🔍 Raw Data (Debug View)"):
+    tab_a, tab_b = st.tabs(["GPX Recommendations", "Default Recommendations"])
+    with tab_a:
+        st.json(st.session_state.gpx_recommendations or {"info": "No GPX uploaded yet."})
+    with tab_b:
+        st.json(st.session_state.recommendations or {"info": "No recommendations fetched yet."})
