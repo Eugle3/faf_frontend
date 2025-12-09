@@ -137,11 +137,6 @@ st.markdown(
     .feature-card:hover {
         transform: translateY(-2px);
     }
-    .feature-icon {
-        font-size: 36px;
-        margin-bottom: 20px;
-        opacity: 0.8;
-    }
     .feature-title {
         font-size: 18px;
         font-weight: 700;
@@ -160,13 +155,24 @@ st.markdown(
 
     /* Dashboard Section Headers */
     .section-header {
-        background: linear-gradient(90deg, #4F6844 0%, #B06CFF 100%);
+        background: #B06CFF;
         color: white;
-        padding: 16px 24px;
+        padding: 18px 28px;
         border-radius: 12px;
-        margin-bottom: 24px;
-        font-weight: 700;
+        margin-bottom: 28px;
+        font-weight: 800;
         font-size: 20px;
+        letter-spacing: 0.3px;
+    }
+    .section-header-green {
+        background: #4F6844;
+        color: white;
+        padding: 18px 28px;
+        border-radius: 12px;
+        margin-bottom: 28px;
+        font-weight: 800;
+        font-size: 20px;
+        letter-spacing: 0.3px;
     }
 
     /* Card Styling */
@@ -205,6 +211,35 @@ st.markdown(
         height: 2px;
         background: linear-gradient(90deg, transparent, #C8C9CE, transparent);
         margin: 40px 0;
+    }
+
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+        .hero-text-section {
+            background: #0F1826;
+        }
+        .hero-text-section h1,
+        .hero-text-section h2 {
+            color: #FFFFFF;
+        }
+        .hero-cta-section a {
+            color: #FFFFFF;
+        }
+        .hero-cta-section a:hover {
+            color: #B06CFF;
+        }
+        .features-section {
+            background: #0F1826;
+        }
+        .features-title {
+            color: #FFFFFF;
+        }
+        .feature-title {
+            color: #FFFFFF;
+        }
+        .feature-desc {
+            color: #C8C9CE;
+        }
     }
     </style>
     """,
@@ -265,7 +300,6 @@ if not st.session_state.entered:
         st.markdown(
             """
             <div class="feature-card">
-                <div class="feature-icon">📍</div>
                 <div class="feature-title">Your Preferences</div>
                 <div class="feature-desc">Upload a GPX file or specify route characteristics. Distance, elevation, terrain—tell us what you're looking for.</div>
             </div>
@@ -277,7 +311,6 @@ if not st.session_state.entered:
         st.markdown(
             """
             <div class="feature-card">
-                <div class="feature-icon">⚡</div>
                 <div class="feature-title">Smart Matching</div>
                 <div class="feature-desc">Our AI analyzes thousands of routes to find perfect matches based on your riding style and preferences.</div>
             </div>
@@ -289,7 +322,6 @@ if not st.session_state.entered:
         st.markdown(
             """
             <div class="feature-card">
-                <div class="feature-icon">🌄</div>
                 <div class="feature-title">Discover Routes</div>
                 <div class="feature-desc">Get curated recommendations with detailed metrics, maps, and insights to plan your next ride.</div>
             </div>
@@ -299,7 +331,7 @@ if not st.session_state.entered:
 
     st.stop()
 
-st.markdown('<div class="section-header">🗺️ Route Discovery Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header">Route Discovery Dashboard</div>', unsafe_allow_html=True)
 
 # Example payload matching the API request body the user showed.
 default_features = {
@@ -432,13 +464,13 @@ st.divider()
 sidebar, map_area = st.columns([1, 2], gap="large")
 
 with sidebar:
-    st.markdown('<div class="section-header">📍 Recommended Routes</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header-green">Recommended Routes</div>', unsafe_allow_html=True)
     route_names = [rec["route_name"] for rec in st.session_state.recommendations][: n_recs or 5]
     selected_route = st.selectbox("Route", route_names, index=0 if route_names else None)
 
     selected = next((rec for rec in st.session_state.recommendations if rec["route_name"] == selected_route), None)
 
-    st.markdown("### 📊 Route Metrics")
+    st.markdown('<div style="font-size: 20px; font-weight: 800; margin: 24px 0 16px 0; color: #0F1826;">Route Metrics</div>', unsafe_allow_html=True)
     if selected:
         st.metric("Distance (m)", f"{selected['distance_m']:.0f}")
         st.metric("Ascent (m)", f"{selected['ascent_m']:.0f}")
@@ -449,7 +481,7 @@ with sidebar:
         st.info("Select a route to view KPIs.")
 
 with map_area:
-    st.markdown('<div class="section-header">🗺️ Interactive Map</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Interactive Map</div>', unsafe_allow_html=True)
     # Example data to keep the map from being empty
     sample_map = pd.DataFrame(
         {
