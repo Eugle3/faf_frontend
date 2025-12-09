@@ -1,0 +1,9 @@
+[theme]
+primaryColor = "#B06CFF"        # Bright Lavender - CTAs and primary actions
+backgroundColor = "#FFFFFF"      # Clean white background
+secondaryBackgroundColor = "#F5F5F7"  # Subtle gray for cards
+textColor = "#0F1826"           # Ink Black for main text
+font = "sans serif"
+
+[server]
+headless = true
