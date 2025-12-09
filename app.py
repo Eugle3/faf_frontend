@@ -46,69 +46,68 @@ st.markdown(
         background: transparent;
     }
 
-    /* Hero Section - Rapha-inspired Design */
-    .hero {
+    /* Hero Section - Clean Rapha Style */
+    .hero-text-section {
         background: #FFFFFF;
-        padding: 0;
-        margin-bottom: 0;
+        padding: 120px 60px 60px;
+        text-align: center;
         width: 100vw;
         margin-left: calc(-50vw + 50%);
-        position: relative;
-        overflow: hidden;
-        height: 85vh;
-        min-height: 600px;
     }
-    .hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('https://images.unsplash.com/photo-1517649763962-0c623066013b?w=2000') right center/cover;
-        z-index: 0;
-    }
-    .hero::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 35%, rgba(255,255,255,0.3) 60%, transparent 100%);
-        z-index: 1;
-    }
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        padding: 180px 60px;
-        max-width: 650px;
-    }
-    .hero h1 {
-        font-size: 110px;
+    .hero-text-section h1 {
+        font-size: 72px;
         font-weight: 900;
-        letter-spacing: -4px;
-        margin: 0;
+        letter-spacing: -2px;
+        margin: 0 0 24px 0;
         color: #0F1826;
         font-family: "Impact", "Arial Black", sans-serif;
-        line-height: 0.95;
         text-transform: uppercase;
     }
-    .hero h2 {
-        font-size: 26px;
+    .hero-text-section h2 {
+        font-size: 22px;
         font-weight: 400;
-        margin-top: 24px;
-        margin-bottom: 40px;
+        margin: 0 auto 40px;
         color: #0F1826;
         font-style: italic;
-        letter-spacing: 0.5px;
+        max-width: 600px;
+        letter-spacing: 0.3px;
     }
-    .hero p {
-        font-size: 16px;
-        color: #4F6844;
-        max-width: 480px;
-        margin: 0 0 32px 0;
-        line-height: 1.7;
+
+    /* Hero CTA Links */
+    .hero-cta-section {
+        text-align: center;
+        margin: 32px 0 60px;
+    }
+    .hero-cta-section a {
+        text-decoration: underline;
+        color: #0F1826;
+        font-weight: 600;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        transition: color 0.2s ease;
+        margin: 0 20px;
+    }
+    .hero-cta-section a:hover {
+        color: #B06CFF;
+    }
+
+    /* Hero Image Section */
+    .hero-image-section {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-bottom: 0;
+        margin-top: 0;
+    }
+    .hero-image-section img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
+        max-height: 65vh;
+    }
+    /* Override Streamlit image container */
+    .hero-image-section [data-testid="stImage"] {
+        width: 100%;
     }
 
     /* Feature Cards Section - Minimal Design */
@@ -187,24 +186,6 @@ st.markdown(
         justify-content: center;
     }
 
-    /* Hero CTA Links */
-    .hero-cta {
-        display: inline-flex;
-        gap: 32px;
-        margin-top: 16px;
-    }
-    .hero-cta a {
-        text-decoration: underline;
-        color: #0F1826;
-        font-weight: 600;
-        font-size: 15px;
-        letter-spacing: 0.5px;
-        transition: color 0.2s ease;
-    }
-    .hero-cta a:hover {
-        color: #B06CFF;
-    }
-
     /* Button Styling */
     .stButton > button {
         border-radius: 10px;
@@ -233,27 +214,36 @@ st.markdown(
 st.markdown('<div class="faf-logo">FAF</div>', unsafe_allow_html=True)
 
 if not st.session_state.entered:
-    # Hero Section
+    # Hero Text Section - Title at Top
     st.markdown(
         """
-        <div class="hero">
-            <div class="hero-content">
-                <h1>FAF</h1>
-                <h2>Discover your next ride.</h2>
-                <p>AI-powered route recommendations for cyclists who crave adventure. Find scenic paths, epic climbs, and hidden roads that match your style.</p>
-                <div class="hero-cta">
-                    <a href="#discover">Start exploring</a>
-                    <a href="#how">How it works</a>
-                </div>
-            </div>
+        <div class="hero-text-section">
+            <h1>FAF</h1>
+            <h2>Discover your next ride.</h2>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # CTA Button - clean and centered
-    st.markdown("<br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # CTA Links
+    st.markdown(
+        """
+        <div class="hero-cta-section">
+            <a href="#discover">Start exploring</a>
+            <a href="#how">How it works</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Hero Image - Full Width Below
+    st.markdown('<div class="hero-image-section">', unsafe_allow_html=True)
+    st.image("assets/hero-cyclist.jpg", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Enter Button - Below Image
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([2, 1, 2])
     with col2:
         if st.button("Enter Dashboard", use_container_width=True, type="primary"):
             st.session_state.entered = True
