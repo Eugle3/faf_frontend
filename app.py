@@ -37,6 +37,24 @@ st.markdown(
         transition: all 0.3s ease;
     }
 
+    /* Route Discovery Title - Top Right */
+    .route-discovery-title {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        font-family: "Impact", "Anton", "Arial Black", sans-serif;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        color: #0F1826;
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        z-index: 9999;
+        text-transform: uppercase;
+    }
+
     /* Header Transparency */
     header[data-testid="stHeader"] {
         background: transparent;
@@ -192,26 +210,40 @@ st.markdown(
 
     /* Align upload and number input heights */
     div[data-testid="stFileUploader"] {
-        min-height: 150px;
+        min-height: 120px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
+    }
+    div[data-testid="stFileUploader"] label {
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        color: #0F1826 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     div[data-testid="stNumberInput"] {
-        min-height: 150px;
+        min-height: 120px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
     }
+    div[data-testid="stNumberInput"] label {
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        color: #0F1826 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-    /* Button Styling - Bigger and Bolder */
+    /* Button Styling - Compact and Bold */
     .stButton > button {
         border-radius: 10px;
         font-weight: 700;
         transition: all 0.3s ease;
         font-size: 18px !important;
-        padding: 16px 36px !important;
-        min-height: 56px;
+        padding: 12px 24px !important;
+        min-height: 48px;
     }
     .stButton > button:hover {
         transform: translateY(-2px);
@@ -307,6 +339,18 @@ st.markdown(
             background: rgba(15, 24, 38, 0.95);
             color: #FFFFFF;
         }
+
+        /* Route Discovery title in dark mode */
+        .route-discovery-title {
+            background: rgba(15, 24, 38, 0.95);
+            color: #FFFFFF;
+        }
+
+        /* Labels in dark mode */
+        div[data-testid="stFileUploader"] label,
+        div[data-testid="stNumberInput"] label {
+            color: #FFFFFF !important;
+        }
     }
     </style>
     """,
@@ -314,6 +358,10 @@ st.markdown(
 )
 
 st.markdown('<div class="faf-logo">FAF</div>', unsafe_allow_html=True)
+
+# Add Route Discovery title when on dashboard
+if st.session_state.entered:
+    st.markdown('<div class="route-discovery-title">Route Discovery</div>', unsafe_allow_html=True)
 
 if not st.session_state.entered:
     # Hero Text Section - Title at Top
@@ -398,7 +446,7 @@ if not st.session_state.entered:
 
     st.stop()
 
-st.markdown('<div class="section-header">Route Discovery Dashboard</div>', unsafe_allow_html=True)
+# Move Route Discovery to top corner - will be styled with CSS
 
 # Example payload matching the API request body the user showed.
 default_features = {
@@ -497,7 +545,7 @@ header = st.container()
 with header:
     route_col, count_col = st.columns(2)
     uploaded_gpx = route_col.file_uploader(
-        "Upload a GPX file",
+        "UPLOAD HERE!",
         type=["gpx"],
         help="Choose a .gpx file to send to the backend.",
     )
@@ -512,7 +560,7 @@ with header:
                 st.error(msg)
 
     n_recs = count_col.number_input(
-        "Number of recommendations",
+        "HOW MANY ROUTES?",
         min_value=1,
         max_value=10,
         value=5,
@@ -548,7 +596,6 @@ with sidebar:
         st.info("Select a route to view KPIs.")
 
 with map_area:
-    st.markdown('<div class="section-header">Interactive Map</div>', unsafe_allow_html=True)
     # Example data to keep the map from being empty
     sample_map = pd.DataFrame(
         {
