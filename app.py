@@ -551,40 +551,45 @@ def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, 
 
 header = st.container()
 with header:
-    route_col, count_col = st.columns(2)
-    uploaded_gpx = route_col.file_uploader(
-        "UPLOAD HERE!",
-        type=["gpx"],
-        help="Choose a .gpx file to send to the backend.",
-    )
-    if uploaded_gpx:
-        st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
-        if st.button("Send GPX to backend", use_container_width=True, type="primary"):
-            ok, msg, data = upload_gpx_to_api(uploaded_gpx)
-            if ok:
+    # Create 2 columns: left for inputs, right for button
+    left_col, right_col = st.columns([3, 2])
+
+    with left_col:
+        # Upload section
+        uploaded_gpx = st.file_uploader(
+            "UPLOAD HERE!",
+            type=["gpx"],
+            help="Choose a .gpx file to send to the backend.",
+        )
+        if uploaded_gpx:
+            st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
+            if st.button("Send GPX to backend", use_container_width=True, type="primary"):
+                ok, msg, data = upload_gpx_to_api(uploaded_gpx)
+                if ok:
+                    st.success(msg)
+                    st.session_state.gpx_recommendations = data
+                else:
+                    st.error(msg)
+
+        # Number input section (below upload)
+        n_recs = st.number_input(
+            "HOW MANY ROUTES?",
+            min_value=1,
+            max_value=10,
+            value=5,
+            step=1,
+        )
+
+    with right_col:
+        # Add spacing to center button vertically
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        if st.button("GET YOUR RECOMMENDATIONS", use_container_width=True, type="primary"):
+            ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
+            if ok and data is not None:
+                st.session_state.recommendations = data
                 st.success(msg)
-                st.session_state.gpx_recommendations = data
             else:
                 st.error(msg)
-
-    n_recs = count_col.number_input(
-        "HOW MANY ROUTES?",
-        min_value=1,
-        max_value=10,
-        value=5,
-        step=1,
-    )
-
-# Centered "GET YOUR RECOMMENDATIONS" button
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    if st.button("GET YOUR RECOMMENDATIONS", use_container_width=True, type="primary"):
-        ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
-        if ok and data is not None:
-            st.session_state.recommendations = data
-            st.success(msg)
-        else:
-            st.error(msg)
 
 st.divider()
 
