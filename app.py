@@ -49,7 +49,7 @@ st.markdown(
     /* Hero Section - Clean Rapha Style */
     .hero-text-section {
         background: #FFFFFF;
-        padding: 120px 60px 60px;
+        padding: 120px 60px 80px;
         text-align: center;
         width: 100vw;
         margin-left: calc(-50vw + 50%);
@@ -75,8 +75,12 @@ st.markdown(
 
     /* Hero CTA Links */
     .hero-cta-section {
+        background: #FFFFFF;
         text-align: center;
-        margin: 32px 0 60px;
+        margin: 0;
+        padding: 0 0 60px 0;
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
     }
     .hero-cta-section a {
         text-decoration: underline;
@@ -95,8 +99,10 @@ st.markdown(
     .hero-image-section {
         width: 100vw;
         margin-left: calc(-50vw + 50%);
-        margin-bottom: 0;
+        margin-bottom: 60px;
         margin-top: 0;
+        background: #FFFFFF;
+        padding-bottom: 40px;
     }
     .hero-image-section img {
         width: 100%;
@@ -247,6 +253,12 @@ st.markdown(
 
     /* Dark Mode Support */
     @media (prefers-color-scheme: dark) {
+        /* Overall page background */
+        .stApp {
+            background-color: #0F1826;
+        }
+
+        /* Hero sections */
         .hero-text-section {
             background: #0F1826;
         }
@@ -254,14 +266,31 @@ st.markdown(
         .hero-text-section h2 {
             color: #FFFFFF;
         }
+        .hero-cta-section {
+            background: #0F1826;
+        }
         .hero-cta-section a {
             color: #FFFFFF;
         }
         .hero-cta-section a:hover {
             color: #B06CFF;
         }
+
+        /* Hero image section */
+        .hero-image-section {
+            background: #0F1826;
+            padding-bottom: 40px;
+        }
+
+        /* Button section in dark mode */
+        .stButton > button {
+            box-shadow: 0 4px 12px rgba(176, 108, 255, 0.2);
+        }
+
+        /* Features section */
         .features-section {
             background: #0F1826;
+            border-top: 1px solid #2A2F3A;
         }
         .features-title {
             color: #FFFFFF;
@@ -271,6 +300,12 @@ st.markdown(
         }
         .feature-desc {
             color: #C8C9CE;
+        }
+
+        /* FAF Logo in dark mode */
+        .faf-logo {
+            background: rgba(15, 24, 38, 0.95);
+            color: #FFFFFF;
         }
     }
     </style>
