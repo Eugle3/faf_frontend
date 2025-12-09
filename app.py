@@ -45,7 +45,7 @@ st.markdown(
         font-weight: 900;
         letter-spacing: 1.5px;
         color: #0F1826;
-        padding: 48px 0 48px 0;
+        padding: 48px 0 80px 0;
         text-transform: uppercase;
         margin: 0;
     }
