@@ -244,7 +244,7 @@ st.markdown(
     /* Button Styling - Compact and Bold */
     .stButton > button {
         border-radius: 10px;
-        font-weight: 700;
+        font-weight: 900 !important;
         transition: all 0.3s ease;
         font-size: 18px !important;
         padding: 14px 28px !important;
