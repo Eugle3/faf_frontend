@@ -551,11 +551,10 @@ def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, 
 
 header = st.container()
 with header:
-    # Create 2 columns: left for inputs, right for button
-    left_col, right_col = st.columns([3, 2])
+    # Create 3 columns: upload, number input, button
+    upload_col, count_col, button_col = st.columns([2, 2, 2])
 
-    with left_col:
-        # Upload section
+    with upload_col:
         uploaded_gpx = st.file_uploader(
             "UPLOAD HERE!",
             type=["gpx"],
@@ -571,7 +570,7 @@ with header:
                 else:
                     st.error(msg)
 
-        # Number input section (below upload)
+    with count_col:
         n_recs = st.number_input(
             "HOW MANY ROUTES?",
             min_value=1,
@@ -580,7 +579,7 @@ with header:
             step=1,
         )
 
-    with right_col:
+    with button_col:
         # Add spacing to align button with inputs
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("GET RECOMMENDATIONS", use_container_width=True, type="primary", key="main_rec_btn"):
