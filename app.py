@@ -1,12 +1,14 @@
 import json
+import os
 from typing import Any, Dict, List
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 
 st.set_page_config(page_title="Route Dashboard", layout="wide")
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 if "entered" not in st.session_state:
     st.session_state.entered = False
@@ -315,18 +317,26 @@ with sidebar:
 
 with map_area:
     st.subheader("Route Map")
-    # Example data to keep the map from being empty
-    sample_map = pd.DataFrame(
-        {
-            "lat": [51.5074, 51.515, 51.5033],
-            "lon": [-0.1278, -0.09, -0.1195],
-        }
-    )
-    st.map(sample_map, size=70)
-    if selected_route:
-        st.caption(f"Placeholder geometry for: {selected_route}")
+    if selected:
+        route_id = selected['route_id']
+        map_url = f"{API_BASE_URL}/visualize-route/{route_id}"
+
+        try:
+            # Fetch map HTML from backend
+            response = requests.get(map_url, timeout=30)
+            if response.status_code == 200:
+                # Display Folium map HTML
+                components.html(response.text, height=600, scrolling=True)
+                st.caption(f"📍 Showing: {selected_route}")
+            else:
+                st.error(f"Could not load map: {response.status_code}")
+                # Fallback to placeholder
+                st.info("Map visualization unavailable for this route")
+        except Exception as e:  # noqa: BLE001
+            st.error(f"Error loading map: {str(e)}")
+            st.info("Unable to display route map")
     else:
-        st.caption("Select a route to label the map view.")
+        st.info("Select a route to view its map")
 
 st.divider()
 with st.expander("🔍 Raw Data (Debug View)"):
