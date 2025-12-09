@@ -41,11 +41,11 @@ st.markdown(
     .route-recommendations-title {
         text-align: center;
         font-family: "Impact", "Arial Black", sans-serif;
-        font-size: 32px;
+        font-size: 42px;
         font-weight: 900;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
         color: #0F1826;
-        padding: 24px 0 32px 0;
+        padding: 48px 0 48px 0;
         text-transform: uppercase;
         margin: 0;
     }
@@ -354,7 +354,7 @@ st.markdown(
 
         /* Route Recommendations title in dark mode */
         .route-recommendations-title {
-            color: #FFFFFF;
+            color: #FFFFFF !important;
         }
 
         /* Labels in dark mode */
