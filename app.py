@@ -205,10 +205,13 @@ st.markdown(
 
     /* Align upload and number input heights */
     div[data-testid="stFileUploader"] {
-        min-height: 120px;
+        height: 140px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
+    }
+    div[data-testid="stFileUploader"] > div {
+        height: 100%;
     }
     div[data-testid="stFileUploader"] label {
         font-weight: 800 !important;
@@ -218,10 +221,13 @@ st.markdown(
         letter-spacing: 0.5px;
     }
     div[data-testid="stNumberInput"] {
-        min-height: 120px;
+        height: 140px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
+    }
+    div[data-testid="stNumberInput"] > div {
+        height: 100%;
     }
     div[data-testid="stNumberInput"] label {
         font-weight: 800 !important;
