@@ -241,20 +241,24 @@ st.markdown(
         min-height: 100px !important;
     }
 
-    /* Button Styling - Large and Prominent */
+    /* Button Styling - Match Input Height */
     .stButton > button {
-        border-radius: 16px;
+        border-radius: 10px;
         font-weight: 900 !important;
         transition: all 0.3s ease;
-        font-size: 22px !important;
-        padding: 50px 32px !important;
-        min-height: 180px !important;
+        font-size: 18px !important;
+        padding: 0 24px !important;
+        height: 100px !important;
+        min-height: 100px !important;
         text-transform: uppercase;
-        letter-spacing: 1.2px;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(176, 108, 255, 0.4);
+        box-shadow: 0 6px 20px rgba(176, 108, 255, 0.3);
     }
 
     /* Add spacing around main button */
@@ -580,8 +584,6 @@ with header:
         )
 
     with button_col:
-        # Add spacing to align button with inputs
-        st.markdown("<br>", unsafe_allow_html=True)
         if st.button("GET RECOMMENDATIONS", use_container_width=True, type="primary", key="main_rec_btn"):
             ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
             if ok and data is not None:
