@@ -253,8 +253,8 @@ if not st.session_state.entered:
     st.markdown(
         """
         <div class="hero-text-section">
-            <h1>FAF</h1>
-            <h2>Discover your next ride.</h2>
+            <h1>Explore faster.</h1>
+            <h2>Discovery should be fun, not complicated.</h2>
         </div>
         """,
         unsafe_allow_html=True,
