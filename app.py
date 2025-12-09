@@ -37,22 +37,17 @@ st.markdown(
         transition: all 0.3s ease;
     }
 
-    /* Route Discovery Title - Top Right */
-    .route-discovery-title {
-        position: fixed;
-        top: 24px;
-        right: 24px;
-        font-family: "Impact", "Anton", "Arial Black", sans-serif;
-        font-size: 24px;
+    /* Route Recommendations Title - Top Center */
+    .route-recommendations-title {
+        text-align: center;
+        font-family: "Impact", "Arial Black", sans-serif;
+        font-size: 32px;
         font-weight: 900;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
         color: #0F1826;
-        padding: 8px 16px;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.95);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        z-index: 9999;
+        padding: 24px 0 32px 0;
         text-transform: uppercase;
+        margin: 0;
     }
 
     /* Header Transparency */
@@ -242,12 +237,19 @@ st.markdown(
         font-weight: 700;
         transition: all 0.3s ease;
         font-size: 18px !important;
-        padding: 12px 24px !important;
-        min-height: 48px;
+        padding: 14px 28px !important;
+        min-height: 52px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
     }
     .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(176, 108, 255, 0.3);
+    }
+
+    /* Add spacing around main button */
+    .stButton {
+        margin: 24px 0;
     }
 
     /* Map Rounded Corners */
@@ -340,9 +342,8 @@ st.markdown(
             color: #FFFFFF;
         }
 
-        /* Route Discovery title in dark mode */
-        .route-discovery-title {
-            background: rgba(15, 24, 38, 0.95);
+        /* Route Recommendations title in dark mode */
+        .route-recommendations-title {
             color: #FFFFFF;
         }
 
@@ -358,10 +359,6 @@ st.markdown(
 )
 
 st.markdown('<div class="faf-logo">FAF</div>', unsafe_allow_html=True)
-
-# Add Route Discovery title when on dashboard
-if st.session_state.entered:
-    st.markdown('<div class="route-discovery-title">Route Discovery</div>', unsafe_allow_html=True)
 
 if not st.session_state.entered:
     # Hero Text Section - Title at Top
@@ -446,7 +443,8 @@ if not st.session_state.entered:
 
     st.stop()
 
-# Move Route Discovery to top corner - will be styled with CSS
+# Dashboard Title
+st.markdown('<h1 class="route-recommendations-title">ROUTE RECOMMENDATIONS</h1>', unsafe_allow_html=True)
 
 # Example payload matching the API request body the user showed.
 default_features = {
@@ -566,13 +564,15 @@ with header:
         value=5,
         step=1,
     )
-    if st.button("Get recommendations", use_container_width=True, type="primary"):
-        ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
-        if ok and data is not None:
-            st.session_state.recommendations = data
-            st.success(msg)
-        else:
-            st.error(msg)
+
+# Full-width "GET YOUR RECOMMENDATIONS" button
+if st.button("GET YOUR RECOMMENDATIONS", use_container_width=True, type="primary"):
+    ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
+    if ok and data is not None:
+        st.session_state.recommendations = data
+        st.success(msg)
+    else:
+        st.error(msg)
 
 st.divider()
 
