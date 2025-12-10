@@ -16,6 +16,8 @@ if "recommendations" not in st.session_state:
     st.session_state.recommendations: List[Dict[str, Any]] = []
 if "gpx_recommendations" not in st.session_state:
     st.session_state.gpx_recommendations: List[Dict[str, Any]] = []
+if "curveball_result" not in st.session_state:
+    st.session_state.curveball_result: Dict[str, Any] | None = None
 
 st.markdown(
     """
@@ -148,6 +150,16 @@ def format_duration(seconds: float) -> str:
 
 
 def upload_gpx_to_api(file) -> tuple[bool, str, Dict[str, Any] | None]:
+    """
+    Upload GPX file to API and get recommendations with curveball.
+
+    Returns:
+        (success, message, result_dict) where result_dict contains:
+        - "similar": List of similar routes
+        - "curveball": Single route from different cluster
+        - "user_cluster_label": User's cluster label
+        - "curveball_cluster_label": Curveball cluster label
+    """
     files = {"file": (file.name, file.getvalue(), "application/gpx+xml")}
     try:
         # Increased timeout to 60s for ORS API call
@@ -167,16 +179,26 @@ def upload_gpx_to_api(file) -> tuple[bool, str, Dict[str, Any] | None]:
     except Exception:  # noqa: BLE001
         return False, "Invalid JSON response from API.", None
 
-    if not isinstance(data, list):
+    if not isinstance(data, dict) or "similar" not in data or "curveball" not in data:
         return False, "Unexpected response format from API.", None
 
-    return True, "Recommendations ready.", data
+    return True, "Recommendations with curveball ready.", data
 
 
-def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, str, List[Dict[str, Any]] | None]:
-    payload = {"features": features, "n_recommendations": n_recs}
+def fetch_curveball_recommendations(features: Dict[str, Any], n_similar: int) -> tuple[bool, str, Dict[str, Any] | None]:
+    """
+    Fetch recommendations with a curveball from a different cluster.
+
+    Returns:
+        (success, message, result_dict) where result_dict contains:
+        - "similar": List of n_similar routes
+        - "curveball": Single route from different cluster
+        - "user_cluster_label": User's cluster label
+        - "curveball_cluster_label": Curveball cluster label
+    """
+    payload = {"features": features, "n_similar": n_similar}
     try:
-        resp = requests.post(f"{API_BASE_URL}/recommend", json=payload, timeout=30)
+        resp = requests.post(f"{API_BASE_URL}/recommend-with-curveball", json=payload, timeout=30)
     except Exception as exc:  # noqa: BLE001
         return False, f"Request failed: {exc}", None
 
@@ -192,10 +214,10 @@ def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, 
     except Exception:  # noqa: BLE001
         return False, "Invalid JSON response from API.", None
 
-    if not isinstance(data, list):
+    if not isinstance(data, dict) or "similar" not in data or "curveball" not in data:
         return False, "Unexpected response format from API.", None
 
-    return True, "Recommendations loaded.", data
+    return True, "Recommendations with curveball loaded.", data
 
 
 header = st.container()
@@ -216,9 +238,10 @@ with header:
             if st.button("🔍 Find Similar Routes", use_container_width=True, type="primary"):
                 with st.spinner("Processing your GPX file..."):
                     ok, msg, data = upload_gpx_to_api(uploaded_gpx)
-                    if ok:
-                        st.success(f"✓ Found {len(data)} similar routes!")
-                        st.session_state.gpx_recommendations = data
+                    if ok and data is not None:
+                        st.success(f"✓ Found {len(data['similar'])} similar routes + 1 curveball!")
+                        st.session_state.curveball_result = data
+                        st.session_state.gpx_recommendations = data["similar"]
                         st.rerun()  # Refresh to show recommendations
                     else:
                         st.error(msg)
@@ -243,11 +266,12 @@ with header:
             value=5,
             step=1,
         )
-        if st.button("Get Recommendations", use_container_width=True):
+        if st.button("Get Recommendations", use_container_width=True, type="primary"):
             with st.spinner("Fetching recommendations..."):
-                ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
+                ok, msg, data = fetch_curveball_recommendations(default_features["features"], n_recs)
                 if ok and data is not None:
-                    st.session_state.recommendations = data
+                    st.session_state.curveball_result = data
+                    st.session_state.recommendations = data["similar"]
                     st.success(msg)
                 else:
                     st.error(msg)
@@ -257,6 +281,11 @@ st.divider()
 sidebar, map_area = st.columns([1, 2], gap="large")
 
 with sidebar:
+    # Show cluster classification if curveball result is available
+    if st.session_state.curveball_result:
+        cluster_label = st.session_state.curveball_result.get("user_cluster_label", "Unknown")
+        st.info(f"🏷️ Your Route Type: **{cluster_label}**")
+
     # Let user choose which recommendation source to view
     rec_source = st.radio(
         "Recommendation Source",
@@ -314,6 +343,23 @@ with sidebar:
                 st.error(f"Failed to fetch GPX: {str(e)}")
     else:
         st.info("Select a route to view KPIs.")
+
+    # Show curveball recommendation if available
+    if st.session_state.curveball_result and st.session_state.curveball_result.get("curveball"):
+        st.divider()
+        st.subheader("🎲 Try Something Different!")
+
+        curveball = st.session_state.curveball_result["curveball"]
+        curveball_cluster = st.session_state.curveball_result.get("curveball_cluster_label", "Unknown")
+
+        st.caption(f"From cluster: {curveball_cluster}")
+        st.markdown(f"**{curveball['route_name']}**")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Distance", f"{curveball['distance_m']/1000:.1f} km")
+        with col2:
+            st.metric("Ascent", f"{curveball['ascent_m']:.0f} m")
 
 with map_area:
     st.subheader("Route Map")
