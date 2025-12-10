@@ -18,6 +18,7 @@ if "gpx_recommendations" not in st.session_state:
 st.markdown(
     """
     <style>
+    /* FAF Logo - Fixed Position */
     .faf-logo {
         position: fixed;
         top: 16px;
@@ -27,20 +28,29 @@ st.markdown(
         font-style: italic;
         font-weight: 900;
         letter-spacing: 1px;
-        color: #0f1116;
+        color: #0F1826;
         padding: 8px 14px;
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.92);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         z-index: 9999;
+        transition: all 0.3s ease;
     }
-    /* Match number input height with uploader */
-    div[data-testid="stNumberInput"] {
-        min-height: 150px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+
+    /* Route Recommendations Title - Top Center */
+    .route-recommendations-title {
+        text-align: center;
+        font-family: "Impact", "Arial Black", sans-serif;
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+        color: #0F1826;
+        padding: 60px 0 100px 0;
+        text-transform: uppercase;
+        margin: 0;
     }
+
+    /* Header Transparency */
     header[data-testid="stHeader"] {
         background: transparent;
         box-shadow: none;
@@ -48,36 +58,339 @@ st.markdown(
     header[data-testid="stHeader"] > div {
         background: transparent;
     }
-    .hero {
-        background: linear-gradient(180deg, #e8c8c8 0%, #c77874 100%);
-        padding: 140px 32px;
+
+    /* Hero Section - Clean Rapha Style */
+    .hero-text-section {
+        background: #FFFFFF;
+        padding: 120px 60px 80px;
         text-align: center;
-        margin-bottom: 32px;
         width: 100vw;
         margin-left: calc(-50vw + 50%);
     }
-    .hero h1 {
-        font-size: 120px;
+    .hero-text-section h1 {
+        font-size: 72px;
         font-weight: 900;
-        letter-spacing: -3px;
-        margin: 0;
-        color: #0f1116;
+        letter-spacing: -2px;
+        margin: 0 0 24px 0;
+        color: #0F1826;
+        font-family: "Impact", "Arial Black", sans-serif;
+        text-transform: uppercase;
     }
-    .hero h2 {
+    .hero-text-section h2 {
+        font-size: 22px;
+        font-weight: 400;
+        margin: 0 auto 40px;
+        color: #0F1826;
+        font-style: italic;
+        max-width: 600px;
+        letter-spacing: 0.3px;
+    }
+
+    /* Hero CTA Links */
+    .hero-cta-section {
+        background: #FFFFFF;
+        text-align: center;
+        margin: 0;
+        padding: 0 0 60px 0;
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+    }
+    .hero-cta-section a {
+        text-decoration: underline;
+        color: #0F1826;
+        font-weight: 600;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        transition: color 0.2s ease;
+        margin: 0 20px;
+    }
+    .hero-cta-section a:hover {
+        color: #B06CFF;
+    }
+
+    /* Hero Image Section */
+    .hero-image-section {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-bottom: 60px;
+        margin-top: 0;
+        background: #FFFFFF;
+        padding-bottom: 40px;
+    }
+    .hero-image-section img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
+        max-height: 65vh;
+    }
+    /* Override Streamlit image container */
+    .hero-image-section [data-testid="stImage"] {
+        width: 100%;
+    }
+
+    /* Feature Cards Section - Minimal Design */
+    .features-section {
+        background: #FFFFFF;
+        padding: 100px 40px;
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-bottom: 60px;
+        border-top: 1px solid #E5E5E5;
+    }
+    .features-title {
+        text-align: center;
         font-size: 36px;
         font-weight: 700;
-        margin-top: 16px;
-        margin-bottom: 40px;
-        color: #0f1116;
+        color: #0F1826;
+        margin-bottom: 70px;
+        letter-spacing: -1px;
     }
-    .enter-btn {
-        font-size: 20px;
-        padding: 14px 24px;
-        border-radius: 12px;
-        border: none;
-        background: #0f1116;
+    .feature-card {
+        background: transparent;
+        padding: 24px 16px;
+        border-radius: 0;
+        margin-bottom: 20px;
+        transition: transform 0.2s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-2px);
+    }
+    .feature-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F1826;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 14px;
+    }
+    .feature-desc {
+        font-size: 15px;
+        color: #666666;
+        line-height: 1.7;
+        font-weight: 400;
+    }
+
+    /* Dashboard Section Headers - Subtitle level */
+    .section-header {
+        background: #B06CFF;
         color: white;
-        cursor: pointer;
+        padding: 18px 28px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .section-header-green {
+        background: #4F6844;
+        color: white;
+        padding: 18px 28px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    /* Typography Hierarchy Summary:
+       - Big Title (42px): ROUTE RECOMMENDATIONS
+       - Subtitle (16-18px, uppercase, bold): Section headers, labels, buttons
+       - Body Text (14px, normal): Descriptive text, inputs
+    */
+
+    /* Card Styling */
+    div[data-testid="stMetric"] {
+        background: white;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #B06CFF;
+    }
+
+    /* Make all three sections equal size */
+    div[data-testid="stFileUploader"],
+    div[data-testid="stNumberInput"],
+    div[data-testid="stButton"] {
+        height: 140px !important;
+    }
+
+    /* File uploader styling */
+    div[data-testid="stFileUploader"] section {
+        height: 100px !important;
+        min-height: 100px !important;
+    }
+    div[data-testid="stFileUploader"] section > div {
+        height: 100px !important;
+        min-height: 100px !important;
+    }
+
+    /* Number input styling */
+    div[data-testid="stNumberInput"] > div > div {
+        height: 100px !important;
+        min-height: 100px !important;
+    }
+
+    /* Subtitle styling - Upload and Number labels */
+    div[data-testid="stFileUploader"] label,
+    div[data-testid="stNumberInput"] label {
+        font-weight: 800 !important;
+        font-size: 16px !important;
+        color: #0F1826 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px !important;
+    }
+
+    /* Body text styling - smaller descriptive text */
+    div[data-testid="stFileUploader"] section small,
+    div[data-testid="stFileUploader"] section p {
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        color: #666666 !important;
+    }
+
+    /* Make number input controls thinner */
+    div[data-testid="stNumberInput"] button {
+        width: 32px !important;
+        min-width: 32px !important;
+        padding: 4px !important;
+    }
+
+    /* Button Styling - Subtitle level action */
+    .stButton > button {
+        border-radius: 10px;
+        font-weight: 900 !important;
+        transition: all 0.3s ease;
+        font-size: 16px !important;
+        padding: 0 24px !important;
+        height: 100px !important;
+        min-height: 100px !important;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(176, 108, 255, 0.3);
+    }
+
+    /* Add spacing around main button */
+    .stButton {
+        margin: 0;
+    }
+
+    /* Map Rounded Corners */
+    [data-testid="stMap"] {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    [data-testid="stMap"] > div {
+        border-radius: 16px;
+    }
+
+    /* Expander Styling */
+    [data-testid="stExpander"] {
+        border-radius: 12px;
+        border: 2px solid #B06CFF;
+        background: white;
+    }
+    [data-testid="stExpander"] summary {
+        font-weight: 700;
+        font-size: 18px;
+        padding: 16px 20px;
+        color: #B06CFF;
+    }
+    [data-testid="stExpander"] summary:hover {
+        color: #FF5C7A;
+    }
+
+    /* Dividers */
+    hr {
+        border: none;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #C8C9CE, transparent);
+        margin: 40px 0;
+    }
+
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+        /* Overall page background */
+        .stApp {
+            background-color: #0F1826;
+        }
+
+        /* Hero sections */
+        .hero-text-section {
+            background: #0F1826;
+        }
+        .hero-text-section h1,
+        .hero-text-section h2 {
+            color: #FFFFFF;
+        }
+        .hero-cta-section {
+            background: #0F1826;
+        }
+        .hero-cta-section a {
+            color: #FFFFFF;
+        }
+        .hero-cta-section a:hover {
+            color: #B06CFF;
+        }
+
+        /* Hero image section */
+        .hero-image-section {
+            background: #0F1826;
+            padding-bottom: 40px;
+        }
+
+        /* Button section in dark mode */
+        .stButton > button {
+            box-shadow: 0 4px 12px rgba(176, 108, 255, 0.2);
+        }
+
+        /* Features section */
+        .features-section {
+            background: #0F1826;
+            border-top: 1px solid #2A2F3A;
+        }
+        .features-title {
+            color: #FFFFFF;
+        }
+        .feature-title {
+            color: #FFFFFF;
+        }
+        .feature-desc {
+            color: #C8C9CE;
+        }
+
+        /* FAF Logo in dark mode */
+        .faf-logo {
+            background: rgba(15, 24, 38, 0.95);
+            color: #FFFFFF;
+        }
+
+        /* Route Recommendations title in dark mode */
+        .route-recommendations-title {
+            color: #FFFFFF !important;
+        }
+
+        /* Labels (subtitles) in dark mode */
+        div[data-testid="stFileUploader"] label,
+        div[data-testid="stNumberInput"] label {
+            color: #FFFFFF !important;
+        }
+
+        /* Body text in dark mode */
+        div[data-testid="stFileUploader"] section small,
+        div[data-testid="stFileUploader"] section p {
+            color: #C8C9CE !important;
+        }
     }
     </style>
     """,
@@ -87,20 +400,90 @@ st.markdown(
 st.markdown('<div class="faf-logo">FAF</div>', unsafe_allow_html=True)
 
 if not st.session_state.entered:
+    # Hero Text Section - Title at Top
     st.markdown(
         """
-        <div class="hero">
-            <h1>FAF</h1>
-            <h2>Cycle More</h2>
+        <div class="hero-text-section">
+            <h1>Explore faster.</h1>
+            <h2>Discovery should be fun, not complicated.</h2>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    if st.button("Click here to enter", use_container_width=True, type="primary"):
-        st.session_state.entered = True
+
+    # CTA Links
+    st.markdown(
+        """
+        <div class="hero-cta-section">
+            <a href="#discover">Start exploring</a>
+            <a href="#how">How it works</a>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Hero Image - Full Width Below
+    st.markdown('<div class="hero-image-section">', unsafe_allow_html=True)
+    st.image("assets/marin-journal-piece-lead-2-1920x900.jpg", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Enter Button - Below Image
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([3, 1, 3])
+    with col2:
+        if st.button("Enter Dashboard", use_container_width=True, type="primary"):
+            st.session_state.entered = True
+            st.rerun()
+
+    # Features Section
+    st.markdown(
+        """
+        <div class="features-section">
+            <div class="features-title">Ride smarter, explore further</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    feat1, feat2, feat3 = st.columns(3, gap="large")
+
+    with feat1:
+        st.markdown(
+            """
+            <div class="feature-card">
+                <div class="feature-title">Your Preferences</div>
+                <div class="feature-desc">Upload a GPX file or specify route characteristics. Distance, elevation, terrain—tell us what you're looking for.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with feat2:
+        st.markdown(
+            """
+            <div class="feature-card">
+                <div class="feature-title">Smart Matching</div>
+                <div class="feature-desc">Our AI analyzes thousands of routes to find perfect matches based on your riding style and preferences.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with feat3:
+        st.markdown(
+            """
+            <div class="feature-card">
+                <div class="feature-title">Discover Routes</div>
+                <div class="feature-desc">Get curated recommendations with detailed metrics, maps, and insights to plan your next ride.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
     st.stop()
 
-st.title("Route Overview")
+# Dashboard Title
+st.markdown('<h1 class="route-recommendations-title">ROUTE RECOMMENDATIONS</h1>', unsafe_allow_html=True)
 
 # Example payload matching the API request body the user showed.
 default_features = {
@@ -197,49 +580,55 @@ def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, 
 
 header = st.container()
 with header:
-    route_col, count_col = st.columns(2)
-    uploaded_gpx = route_col.file_uploader(
-        "Upload a GPX file",
-        type=["gpx"],
-        help="Choose a .gpx file to send to the backend.",
-    )
-    if uploaded_gpx:
-        st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
-        if st.button("Send GPX to backend", use_container_width=True):
-            ok, msg, data = upload_gpx_to_api(uploaded_gpx)
-            if ok:
+    # Create 3 equal columns
+    upload_col, count_col, button_col = st.columns(3)
+
+    with upload_col:
+        uploaded_gpx = st.file_uploader(
+            "UPLOAD HERE!",
+            type=["gpx"],
+            help="Choose a .gpx file to send to the backend.",
+        )
+        if uploaded_gpx:
+            st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
+            if st.button("Send GPX to backend", use_container_width=True, type="primary"):
+                ok, msg, data = upload_gpx_to_api(uploaded_gpx)
+                if ok:
+                    st.success(msg)
+                    st.session_state.gpx_recommendations = data
+                else:
+                    st.error(msg)
+
+    with count_col:
+        n_recs = st.number_input(
+            "HOW MANY ROUTES?",
+            min_value=1,
+            max_value=10,
+            value=5,
+            step=1,
+        )
+
+    with button_col:
+        if st.button("GET RECOMMENDATIONS", use_container_width=True, type="primary", key="main_rec_btn"):
+            ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
+            if ok and data is not None:
+                st.session_state.recommendations = data
                 st.success(msg)
-                st.session_state.gpx_recommendations = data
             else:
                 st.error(msg)
-
-    n_recs = count_col.number_input(
-        "Number of recommendations",
-        min_value=1,
-        max_value=10,
-        value=5,
-        step=1,
-    )
-    if st.button("Get recommendations", use_container_width=True):
-        ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
-        if ok and data is not None:
-            st.session_state.recommendations = data
-            st.success(msg)
-        else:
-            st.error(msg)
 
 st.divider()
 
 sidebar, map_area = st.columns([1, 2], gap="large")
 
 with sidebar:
-    st.subheader("Recommended Routes")
+    st.markdown('<div class="section-header-green">Recommended Routes</div>', unsafe_allow_html=True)
     route_names = [rec["route_name"] for rec in st.session_state.recommendations][: n_recs or 5]
     selected_route = st.selectbox("Route", route_names, index=0 if route_names else None)
 
     selected = next((rec for rec in st.session_state.recommendations if rec["route_name"] == selected_route), None)
 
-    st.subheader("KPIs")
+    st.markdown('<div style="font-size: 18px; font-weight: 800; margin: 24px 0 16px 0; color: #0F1826; text-transform: uppercase; letter-spacing: 1px;">Route Metrics</div>', unsafe_allow_html=True)
     if selected:
         st.metric("Distance (m)", f"{selected['distance_m']:.0f}")
         st.metric("Ascent (m)", f"{selected['ascent_m']:.0f}")
@@ -250,7 +639,6 @@ with sidebar:
         st.info("Select a route to view KPIs.")
 
 with map_area:
-    st.subheader("Route Map")
     # Example data to keep the map from being empty
     sample_map = pd.DataFrame(
         {
