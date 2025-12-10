@@ -1,12 +1,14 @@
 import json
+import os
 from typing import Any, Dict, List
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 
 st.set_page_config(page_title="Route Dashboard", layout="wide")
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 if "entered" not in st.session_state:
     st.session_state.entered = False
@@ -14,6 +16,8 @@ if "recommendations" not in st.session_state:
     st.session_state.recommendations: List[Dict[str, Any]] = []
 if "gpx_recommendations" not in st.session_state:
     st.session_state.gpx_recommendations: List[Dict[str, Any]] = []
+if "curveball_result" not in st.session_state:
+    st.session_state.curveball_result: Dict[str, Any] | None = None
 
 st.markdown(
     """
@@ -529,9 +533,20 @@ def format_duration(seconds: float) -> str:
 
 
 def upload_gpx_to_api(file) -> tuple[bool, str, Dict[str, Any] | None]:
+    """
+    Upload GPX file to API and get recommendations with curveball.
+
+    Returns:
+        (success, message, result_dict) where result_dict contains:
+        - "similar": List of similar routes
+        - "curveball": Single route from different cluster
+        - "user_cluster_label": User's cluster label
+        - "curveball_cluster_label": Curveball cluster label
+    """
     files = {"file": (file.name, file.getvalue(), "application/gpx+xml")}
     try:
-        resp = requests.post(f"{API_BASE_URL}/recommend-from-gpx", files=files, timeout=30)
+        # Increased timeout to 60s for ORS API call
+        resp = requests.post(f"{API_BASE_URL}/recommend-from-gpx", files=files, timeout=60)
     except Exception as exc:  # noqa: BLE001
         return False, f"Request failed: {exc}", None
 
@@ -547,16 +562,26 @@ def upload_gpx_to_api(file) -> tuple[bool, str, Dict[str, Any] | None]:
     except Exception:  # noqa: BLE001
         return False, "Invalid JSON response from API.", None
 
-    if not isinstance(data, list):
+    if not isinstance(data, dict) or "similar" not in data or "curveball" not in data:
         return False, "Unexpected response format from API.", None
 
-    return True, "Recommendations ready.", data
+    return True, "Recommendations with curveball ready.", data
 
 
-def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, str, List[Dict[str, Any]] | None]:
-    payload = {"features": features, "n_recommendations": n_recs}
+def fetch_curveball_recommendations(features: Dict[str, Any], n_similar: int) -> tuple[bool, str, Dict[str, Any] | None]:
+    """
+    Fetch recommendations with a curveball from a different cluster.
+
+    Returns:
+        (success, message, result_dict) where result_dict contains:
+        - "similar": List of n_similar routes
+        - "curveball": Single route from different cluster
+        - "user_cluster_label": User's cluster label
+        - "curveball_cluster_label": Curveball cluster label
+    """
+    payload = {"features": features, "n_similar": n_similar}
     try:
-        resp = requests.post(f"{API_BASE_URL}/recommend", json=payload, timeout=30)
+        resp = requests.post(f"{API_BASE_URL}/recommend-with-curveball", json=payload, timeout=30)
     except Exception as exc:  # noqa: BLE001
         return False, f"Request failed: {exc}", None
 
@@ -572,86 +597,180 @@ def fetch_recommendations(features: Dict[str, Any], n_recs: int) -> tuple[bool, 
     except Exception:  # noqa: BLE001
         return False, "Invalid JSON response from API.", None
 
-    if not isinstance(data, list):
+    if not isinstance(data, dict) or "similar" not in data or "curveball" not in data:
         return False, "Unexpected response format from API.", None
 
-    return True, "Recommendations loaded.", data
+    return True, "Recommendations with curveball loaded.", data
 
 
 header = st.container()
 with header:
-    # Create 3 equal columns
-    upload_col, count_col, button_col = st.columns(3)
+    st.subheader("🚴 Find Similar Routes")
 
-    with upload_col:
+    tab1, tab2 = st.tabs(["Upload GPX File", "Use Default Features"])
+
+    with tab1:
         uploaded_gpx = st.file_uploader(
-            "UPLOAD HERE!",
+            "Upload a GPX file from your bike computer or tracking app",
             type=["gpx"],
-            help="Choose a .gpx file to send to the backend.",
+            help="Upload a .gpx file to find routes with similar characteristics.",
         )
         if uploaded_gpx:
-            st.caption(f"Selected file: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())} bytes)")
-            if st.button("Send GPX to backend", use_container_width=True, type="primary"):
-                ok, msg, data = upload_gpx_to_api(uploaded_gpx)
-                if ok:
-                    st.success(msg)
-                    st.session_state.gpx_recommendations = data
-                else:
-                    st.error(msg)
+            st.caption(f"✓ Selected: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())/1024:.1f} KB)")
 
-    with count_col:
+            if st.button("🔍 Find Similar Routes", use_container_width=True, type="primary"):
+                with st.spinner("Processing your GPX file..."):
+                    ok, msg, data = upload_gpx_to_api(uploaded_gpx)
+                    if ok and data is not None:
+                        st.success(f"✓ Found {len(data['similar'])} similar routes + 1 curveball!")
+                        st.session_state.curveball_result = data
+                        st.session_state.gpx_recommendations = data["similar"]
+                        st.rerun()  # Refresh to show recommendations
+                    else:
+                        st.error(msg)
+
+        # Display GPX file details if available
+        if uploaded_gpx and st.session_state.gpx_recommendations:
+            with st.expander("📊 GPX File Details"):
+                first_rec = st.session_state.gpx_recommendations[0] if st.session_state.gpx_recommendations else None
+                if first_rec:
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Your Route Distance", f"{first_rec['distance_m']/1000:.1f} km")
+                    col2.metric("Your Route Ascent", f"{first_rec['ascent_m']:.0f} m")
+                    # Note: Primary surface type would require backend to return surface breakdown
+                    surface_type = first_rec.get('primary_surface', 'N/A')
+                    col3.metric("Primary Surface", surface_type)
+
+    with tab2:
         n_recs = st.number_input(
-            "HOW MANY ROUTES?",
+            "Number of recommendations",
             min_value=1,
             max_value=10,
             value=5,
             step=1,
         )
-
-    with button_col:
-        if st.button("GET RECOMMENDATIONS", use_container_width=True, type="primary", key="main_rec_btn"):
-            ok, msg, data = fetch_recommendations(default_features["features"], n_recs)
-            if ok and data is not None:
-                st.session_state.recommendations = data
-                st.success(msg)
-            else:
-                st.error(msg)
+        if st.button("Get Recommendations", use_container_width=True, type="primary"):
+            with st.spinner("Fetching recommendations..."):
+                ok, msg, data = fetch_curveball_recommendations(default_features["features"], n_recs)
+                if ok and data is not None:
+                    st.session_state.curveball_result = data
+                    st.session_state.recommendations = data["similar"]
+                    st.success(msg)
+                else:
+                    st.error(msg)
 
 st.divider()
 
 sidebar, map_area = st.columns([1, 2], gap="large")
 
 with sidebar:
-    st.markdown('<div class="section-header-green">Recommended Routes</div>', unsafe_allow_html=True)
-    route_names = [rec["route_name"] for rec in st.session_state.recommendations][: n_recs or 5]
+    # Show cluster classification if curveball result is available
+    if st.session_state.curveball_result:
+        cluster_label = st.session_state.curveball_result.get("user_cluster_label", "Unknown")
+        st.info(f"🏷️ Your Route Type: **{cluster_label}**")
+
+    # Let user choose which recommendation source to view
+    rec_source = st.radio(
+        "Recommendation Source",
+        ["Default Features", "Uploaded GPX"],
+        index=1 if st.session_state.gpx_recommendations else 0
+    )
+
+    # Choose which recommendations to display
+    if rec_source == "Uploaded GPX" and st.session_state.gpx_recommendations:
+        active_recs = st.session_state.gpx_recommendations
+        st.caption(f"📍 Showing {len(active_recs)} routes similar to your GPX file")
+    else:
+        active_recs = st.session_state.recommendations
+        st.caption(f"📍 Showing routes based on default features")
+
+    st.subheader("Recommended Routes")
+    route_names = [rec["route_name"] for rec in active_recs][:5]
     selected_route = st.selectbox("Route", route_names, index=0 if route_names else None)
 
-    selected = next((rec for rec in st.session_state.recommendations if rec["route_name"] == selected_route), None)
+    selected = next((rec for rec in active_recs if rec["route_name"] == selected_route), None)
 
     st.markdown('<div style="font-size: 18px; font-weight: 800; margin: 24px 0 16px 0; color: #0F1826; text-transform: uppercase; letter-spacing: 1px;">Route Metrics</div>', unsafe_allow_html=True)
     if selected:
-        st.metric("Distance (m)", f"{selected['distance_m']:.0f}")
-        st.metric("Ascent (m)", f"{selected['ascent_m']:.0f}")
+        st.metric("Distance", f"{selected['distance_m']/1000:.1f} km")
+        st.metric("Ascent", f"{selected['ascent_m']:.0f} m")
         st.metric("Duration", format_duration(selected["duration_s"]))
-        st.metric("Turn Density", f"{selected['turn_density']:.2f}")
+        st.metric("Turn Density", f"{selected['turn_density']:.4f}")
         st.metric("Similarity Score", f"{selected['similarity_score']:.4f}")
+
+        # Add GPX download button
+        st.divider()
+        if st.button("📥 Download GPX", use_container_width=True, type="primary"):
+            route_id = selected['route_id']
+            gpx_url = f"{API_BASE_URL}/download-gpx/{route_id}"
+
+            try:
+                response = requests.get(gpx_url, timeout=30)
+                if response.status_code == 200:
+                    # Trigger download using Streamlit's download_button
+                    st.download_button(
+                        label="💾 Click to Save GPX File",
+                        data=response.content,
+                        file_name=f"route_{route_id}.gpx",
+                        mime="application/gpx+xml",
+                        use_container_width=True
+                    )
+                    st.success("✓ GPX file ready! Click above to save.")
+                else:
+                    try:
+                        error_detail = response.json().get('detail', 'Unknown error')
+                    except Exception:  # noqa: BLE001
+                        error_detail = response.text
+                    st.error(f"Error: {error_detail}")
+            except Exception as e:  # noqa: BLE001
+                st.error(f"Failed to fetch GPX: {str(e)}")
     else:
         st.info("Select a route to view KPIs.")
 
+    # Show curveball recommendation if available
+    if st.session_state.curveball_result and st.session_state.curveball_result.get("curveball"):
+        st.divider()
+        st.subheader("🎲 Try Something Different!")
+
+        curveball = st.session_state.curveball_result["curveball"]
+        curveball_cluster = st.session_state.curveball_result.get("curveball_cluster_label", "Unknown")
+
+        st.caption(f"From cluster: {curveball_cluster}")
+        st.markdown(f"**{curveball['route_name']}**")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Distance", f"{curveball['distance_m']/1000:.1f} km")
+        with col2:
+            st.metric("Ascent", f"{curveball['ascent_m']:.0f} m")
+
 with map_area:
-    # Example data to keep the map from being empty
-    sample_map = pd.DataFrame(
-        {
-            "lat": [51.5074, 51.515, 51.5033],
-            "lon": [-0.1278, -0.09, -0.1195],
-        }
-    )
-    st.map(sample_map, size=70)
-    if selected_route:
-        st.caption(f"Placeholder geometry for: {selected_route}")
+    st.subheader("Route Map")
+    if selected:
+        route_id = selected['route_id']
+        map_url = f"{API_BASE_URL}/visualize-route/{route_id}"
+
+        try:
+            # Fetch map HTML from backend
+            response = requests.get(map_url, timeout=30)
+            if response.status_code == 200:
+                # Display Folium map HTML
+                components.html(response.text, height=600, scrolling=True)
+                st.caption(f"📍 Showing: {selected_route}")
+            else:
+                st.error(f"Could not load map: {response.status_code}")
+                # Fallback to placeholder
+                st.info("Map visualization unavailable for this route")
+        except Exception as e:  # noqa: BLE001
+            st.error(f"Error loading map: {str(e)}")
+            st.info("Unable to display route map")
     else:
-        st.caption("Select a route to label the map view.")
+        st.info("Select a route to view its map")
 
 st.divider()
-with st.expander("Raw recommendations"):
-    st.json(st.session_state.recommendations or {"info": "No recommendations fetched yet."})
+with st.expander("🔍 Raw Data (Debug View)"):
+    tab_a, tab_b = st.tabs(["GPX Recommendations", "Default Recommendations"])
+    with tab_a:
+        st.json(st.session_state.gpx_recommendations or {"info": "No GPX uploaded yet."})
+    with tab_b:
+        st.json(st.session_state.recommendations or {"info": "No recommendations fetched yet."})
