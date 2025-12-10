@@ -1,0 +1,12 @@
+[theme]
+primaryColor = "#B06CFF"        # Bright Lavender - CTAs and primary actions
+backgroundColor = "#FFFFFF"      # Clean white background (light mode)
+secondaryBackgroundColor = "#F5F5F7"  # Subtle gray for cards (light mode)
+textColor = "#0F1826"           # Ink Black for main text (light mode)
+font = "sans serif"
+
+# Note: Streamlit automatically adjusts colors for dark mode based on system preferences
+# Our custom CSS in app.py provides additional dark mode styling
+
+[server]
+headless = true
