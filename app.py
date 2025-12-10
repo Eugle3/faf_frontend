@@ -8,7 +8,7 @@ import streamlit.components.v1 as components
 import requests
 
 st.set_page_config(page_title="Route Dashboard", layout="wide")
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8001")
 
 if "entered" not in st.session_state:
     st.session_state.entered = False
@@ -220,11 +220,47 @@ def fetch_curveball_recommendations(features: Dict[str, Any], n_similar: int) ->
     return True, "Recommendations with curveball loaded.", data
 
 
+def fetch_prompt_recommendations(prompt: str, n_similar: int) -> tuple[bool, str, Dict[str, Any] | None]:
+    """
+    Generate route recommendations from a natural language prompt.
+
+    Returns:
+        (success, message, result_dict) where result_dict contains:
+        - "similar": List of n_similar routes
+        - "curveball": Single route from different cluster
+        - "user_cluster_label": User's cluster label
+        - "curveball_cluster_label": Curveball cluster label
+        - "generated_features": Features generated from the prompt
+    """
+    payload = {"prompt": prompt, "n_similar": n_similar}
+    try:
+        resp = requests.post(f"{API_BASE_URL}/recommend-from-prompt", json=payload, timeout=60)
+    except Exception as exc:  # noqa: BLE001
+        return False, f"Request failed: {exc}", None
+
+    if resp.status_code != 200:
+        try:
+            detail = resp.json().get("detail")
+        except Exception:  # noqa: BLE001
+            detail = resp.text
+        return False, f"API error {resp.status_code}: {detail}", None
+
+    try:
+        data = resp.json()
+    except Exception:  # noqa: BLE001
+        return False, "Invalid JSON response from API.", None
+
+    if not isinstance(data, dict) or "similar" not in data or "curveball" not in data:
+        return False, "Unexpected response format from API.", None
+
+    return True, "Recommendations from prompt ready.", data
+
+
 header = st.container()
 with header:
     st.subheader("🚴 Find Similar Routes")
 
-    tab1, tab2 = st.tabs(["Upload GPX File", "Use Default Features"])
+    tab1, tab2 = st.tabs(["Upload GPX File", "Describe Your Route"])
 
     with tab1:
         uploaded_gpx = st.file_uploader(
@@ -235,7 +271,7 @@ with header:
         if uploaded_gpx:
             st.caption(f"✓ Selected: {uploaded_gpx.name} ({len(uploaded_gpx.getvalue())/1024:.1f} KB)")
 
-            if st.button("🔍 Find Similar Routes", use_container_width=True, type="primary"):
+            if st.button("🔍 Find Similar Routes", use_container_width=True, type="primary", key="gpx_find"):
                 with st.spinner("Processing your GPX file..."):
                     ok, msg, data = upload_gpx_to_api(uploaded_gpx)
                     if ok and data is not None:
@@ -259,22 +295,62 @@ with header:
                     col3.metric("Primary Surface", surface_type)
 
     with tab2:
-        n_recs = st.number_input(
+        st.markdown("**Describe your ideal route in natural language and let AI find similar routes!**")
+
+        st.markdown("""
+        **Examples:**
+        - "A flat 10 km loop around Richmond Park, mostly paved, low traffic"
+        - "A challenging 20km mountain route with steep climbs and gravel sections"
+        - "An easy 5km urban cycle path suitable for beginners"
+        """)
+
+        user_prompt = st.text_area(
+            "Describe your ideal route:",
+            placeholder="e.g., A flat 10 km loop around a park, mostly paved, low traffic",
+            height=120,
+            help="Describe the route you're looking for in natural language"
+        )
+
+        n_recs_prompt = st.number_input(
             "Number of recommendations",
             min_value=1,
             max_value=10,
             value=5,
             step=1,
+            key="prompt_n_recs"
         )
-        if st.button("Get Recommendations", use_container_width=True, type="primary"):
-            with st.spinner("Fetching recommendations..."):
-                ok, msg, data = fetch_curveball_recommendations(default_features["features"], n_recs)
-                if ok and data is not None:
-                    st.session_state.curveball_result = data
-                    st.session_state.recommendations = data["similar"]
-                    st.success(msg)
-                else:
-                    st.error(msg)
+
+        if st.button("🔍 Find Routes", use_container_width=True, type="primary", key="prompt_find"):
+            if not user_prompt.strip():
+                st.warning("⚠️ Please describe your ideal route first!")
+            else:
+                with st.spinner("Generating route features and finding matches..."):
+                    ok, msg, data = fetch_prompt_recommendations(user_prompt, n_recs_prompt)
+                    if ok and data is not None:
+                        st.success(f"✓ Found {len(data['similar'])} similar routes + 1 curveball!")
+                        st.session_state.curveball_result = data
+                        st.session_state.recommendations = data["similar"]
+
+                        # Show generated features in an expander
+                        if "generated_features" in data:
+                            with st.expander("🤖 View Generated Route Features"):
+                                generated = data["generated_features"]
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("Distance", f"{generated.get('distance_m', 0)/1000:.1f} km")
+                                    st.metric("Ascent", f"{generated.get('ascent_m', 0):.0f} m")
+                                with col2:
+                                    st.metric("Flat Section", f"{generated.get('Flat Section', 0):.0f}%")
+                                    st.metric("Paved Road", f"{generated.get('Paved_Road', 0):.0f}%")
+                                with col3:
+                                    st.metric("Cycleway", f"{generated.get('Cycleway', 0):.0f}%")
+                                    st.metric("Region", generated.get('region', 'N/A'))
+
+                        st.rerun()  # Refresh to show recommendations
+                    else:
+                        st.error(msg)
+                        if "OPENKEY" in msg:
+                            st.info("💡 Make sure your OPENKEY environment variable is set for OpenAI API access")
 
 st.divider()
 
@@ -289,7 +365,7 @@ with sidebar:
     # Let user choose which recommendation source to view
     rec_source = st.radio(
         "Recommendation Source",
-        ["Default Features", "Uploaded GPX"],
+        ["LLM Prompt", "Uploaded GPX"],
         index=1 if st.session_state.gpx_recommendations else 0
     )
 
@@ -299,7 +375,7 @@ with sidebar:
         st.caption(f"📍 Showing {len(active_recs)} routes similar to your GPX file")
     else:
         active_recs = st.session_state.recommendations
-        st.caption(f"📍 Showing routes based on default features")
+        st.caption(f"📍 Showing routes based on your prompt")
 
     st.subheader("Recommended Routes")
     route_names = [rec["route_name"] for rec in active_recs][:5]
@@ -386,8 +462,8 @@ with map_area:
 
 st.divider()
 with st.expander("🔍 Raw Data (Debug View)"):
-    tab_a, tab_b = st.tabs(["GPX Recommendations", "Default Recommendations"])
+    tab_a, tab_b = st.tabs(["GPX Recommendations", "Prompt Recommendations"])
     with tab_a:
         st.json(st.session_state.gpx_recommendations or {"info": "No GPX uploaded yet."})
     with tab_b:
-        st.json(st.session_state.recommendations or {"info": "No recommendations fetched yet."})
+        st.json(st.session_state.recommendations or {"info": "No prompt recommendations yet."})
