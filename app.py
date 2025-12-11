@@ -8,7 +8,7 @@ import streamlit.components.v1 as components
 import requests
 
 st.set_page_config(page_title="Route Dashboard", layout="wide")
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8001")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 if "entered" not in st.session_state:
     st.session_state.entered = False
@@ -18,6 +18,8 @@ if "gpx_recommendations" not in st.session_state:
     st.session_state.gpx_recommendations: List[Dict[str, Any]] = []
 if "curveball_result" not in st.session_state:
     st.session_state.curveball_result: Dict[str, Any] | None = None
+if "curveball_view" not in st.session_state:
+    st.session_state.curveball_view = None
 
 st.markdown(
     """
@@ -723,10 +725,10 @@ with header:
                                     st.metric("Distance", f"{generated.get('distance_m', 0)/1000:.1f} km")
                                     st.metric("Ascent", f"{generated.get('ascent_m', 0):.0f} m")
                                 with col2:
-                                    st.metric("Flat Section", f"{generated.get('Flat Section', 0):.0f}%")
-                                    st.metric("Paved Road", f"{generated.get('Paved_Road', 0):.0f}%")
+                                    st.metric("Flat Section", f"{generated.get('Flat Section', 0)*100:.0f}%")
+                                    st.metric("Paved Road", f"{generated.get('Paved_Road', 0)*100:.0f}%")
                                 with col3:
-                                    st.metric("Cycleway", f"{generated.get('Cycleway', 0):.0f}%")
+                                    st.metric("Cycleway", f"{generated.get('Cycleway', 0)*100:.0f}%")
                                     st.metric("Region", generated.get('region', 'N/A'))
 
                         st.rerun()  # Refresh to show recommendations
@@ -760,19 +762,44 @@ with sidebar:
         active_recs = st.session_state.recommendations
         st.caption(f"📍 Showing routes based on your prompt")
 
-    st.subheader("Recommended Routes")
-    route_names = [rec["route_name"] for rec in active_recs][:5]
-    selected_route = st.selectbox("Route", route_names, index=0 if route_names else None)
+    # Create tabs for recommended routes and curveball
+    has_curveball = st.session_state.curveball_result and st.session_state.curveball_result.get("curveball")
 
-    selected = next((rec for rec in active_recs if rec["route_name"] == selected_route), None)
+    if has_curveball:
+        tab1, tab2 = st.tabs(["🎯 Recommended Routes", "🎲 Why not try..."])
+    else:
+        # If no curveball, just show recommended routes without tabs
+        tab1 = st.container()
+        tab2 = None
 
-    st.markdown('<div style="font-size: 18px; font-weight: 800; margin: 24px 0 16px 0; color: #0F1826; text-transform: uppercase; letter-spacing: 1px;">Route Metrics</div>', unsafe_allow_html=True)
+    # Tab 1: Recommended Routes
+    with tab1:
+        st.subheader("Recommended Routes")
+        route_names = [rec["route_name"] for rec in active_recs][:5]
+        selected_route = st.selectbox("Route", route_names, index=0 if route_names else None, key="rec_selectbox")
+        selected = next((rec for rec in active_recs if rec["route_name"] == selected_route), None)
+
+    # Tab 2: Curveball (if available)
+    if tab2 is not None:
+        with tab2:
+            curveball = st.session_state.curveball_result["curveball"]
+            curveball_cluster = st.session_state.curveball_result.get("curveball_cluster_label", "Unknown")
+            user_cluster = st.session_state.curveball_result.get("user_cluster_label", "Unknown")
+
+            st.caption(f"Your routes are typically: **{user_cluster}**")
+            st.caption(f"This route is: **{curveball_cluster}**")
+            st.markdown(f"### {curveball['route_name']}")
+
+            # Override selected to be the curveball
+            selected = curveball
+
+    # Route Stats section (displays for whatever is selected in either tab)
+    st.markdown('<div style="font-size: 18px; font-weight: 800; margin: 24px 0 16px 0; color: #0F1826; text-transform: uppercase; letter-spacing: 1px;">Route Stats</div>', unsafe_allow_html=True)
     if selected:
         st.metric("Distance", f"{selected['distance_m']/1000:.1f} km")
         st.metric("Ascent", f"{selected['ascent_m']:.0f} m")
-        st.metric("Duration", format_duration(selected["duration_s"]))
-        st.metric("Turn Density", f"{selected['turn_density']:.4f}")
-        st.metric("Similarity Score", f"{selected['similarity_score']:.4f}")
+        st.metric("Estimated Duration", format_duration(selected["duration_s"]))
+        st.metric("Surface Type", selected.get("primary_surface", "Unknown"))
 
         # Add GPX download button
         st.divider()
@@ -801,29 +828,15 @@ with sidebar:
             except Exception as e:  # noqa: BLE001
                 st.error(f"Failed to fetch GPX: {str(e)}")
     else:
-        st.info("Select a route to view KPIs.")
-
-    # Show curveball recommendation if available
-    if st.session_state.curveball_result and st.session_state.curveball_result.get("curveball"):
-        st.divider()
-        st.subheader("🎲 Try Something Different!")
-
-        curveball = st.session_state.curveball_result["curveball"]
-        curveball_cluster = st.session_state.curveball_result.get("curveball_cluster_label", "Unknown")
-
-        st.caption(f"From cluster: {curveball_cluster}")
-        st.markdown(f"**{curveball['route_name']}**")
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Distance", f"{curveball['distance_m']/1000:.1f} km")
-        with col2:
-            st.metric("Ascent", f"{curveball['ascent_m']:.0f} m")
+        st.info("Select a route to view Route Stats.")
 
 with map_area:
     st.subheader("Route Map")
+
+    # Display whichever route is currently selected (from either tab)
     if selected:
         route_id = selected['route_id']
+        route_name = selected['route_name']
         map_url = f"{API_BASE_URL}/visualize-route/{route_id}"
 
         try:
@@ -832,7 +845,7 @@ with map_area:
             if response.status_code == 200:
                 # Display Folium map HTML
                 components.html(response.text, height=600, scrolling=True)
-                st.caption(f"📍 Showing: {selected_route}")
+                st.caption(f"📍 Showing: {route_name}")
             else:
                 st.error(f"Could not load map: {response.status_code}")
                 # Fallback to placeholder
