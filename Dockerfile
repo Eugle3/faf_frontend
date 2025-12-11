@@ -15,8 +15,9 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY app.py .
+# Copy application code and assets
+COPY app_v2.py .
+COPY assets/ ./assets/
 
 # Cloud Run will provide PORT environment variable
 ENV PORT=8080
@@ -27,7 +28,7 @@ EXPOSE 8080
 # --server.address 0.0.0.0 allows external connections
 # --server.enableCORS false prevents CORS issues
 # --server.enableXsrfProtection false needed for Cloud Run
-CMD streamlit run app.py \
+CMD streamlit run app_v2.py \
     --server.port=$PORT \
     --server.address=0.0.0.0 \
     --server.enableCORS=false \
