@@ -1,4 +1,5 @@
 import os
+import base64
 from typing import Any, Dict, List
 
 import streamlit as st
@@ -8,6 +9,14 @@ import requests
 st.set_page_config(page_title="FAF - Find A Friend", layout="wide", initial_sidebar_state="collapsed")
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
+# Embed hero image as base64 for CSS background to ensure it loads
+HERO_IMAGE_PATH = os.path.join(os.path.dirname(__file__), "assets", "marin-journal-piece-lead-2-1920x900.jpg")
+try:
+    with open(HERO_IMAGE_PATH, "rb") as _f:
+        HERO_BG_BASE64 = base64.b64encode(_f.read()).decode("ascii")
+except FileNotFoundError:
+    HERO_BG_BASE64 = None
+API_BASE_URL = 'https://cyclemore-backend-696636878944.europe-west2.run.app/'
 # Initialize session state
 if "page" not in st.session_state:
     st.session_state.page = "landing"
@@ -68,43 +77,62 @@ st.markdown(
         position: relative;
         width: 100%;
         margin: 40px 0;
-    }
-
-    .hero-section img {
-        position: relative;
-        z-index: 1;
+        min-height: 65vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+            linear-gradient(120deg, rgba(0,0,0,0.38), rgba(0,0,0,0.20)),
+            url('assets/marin-journal-piece-lead-2-1920x900.jpg');
+        background-size: cover;
+        background-position: center;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 16px 38px rgba(0,0,0,0.22);
     }
 
     .hero-overlay {
-        position: absolute;
-        top: 120px;
-        left: 50%;
-        transform: translate(-50%, 0);
-        width: 80%;
+        position: relative;
+        z-index: 1;
         text-align: center;
-        z-index: 10;
+        width: 100%;
+        max-width: 900px;
+        padding: 60px 24px;
+        color: #ffffff;
     }
 
     .hero-text {
-        font-size: 48px;
+        font-size: 52px;
         font-weight: 900;
-        color: black;
-        margin-bottom: 20px;
-        letter-spacing: 2px;
+        color: #ffffff;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+        text-shadow: 0 8px 22px rgba(0,0,0,0.35);
     }
 
     .hero-subtext {
-        font-size: 24px;
-        font-weight: 700;
-        color: black;
-        margin-bottom: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: #f0f4fb;
+        margin-bottom: 12px;
+        text-shadow: 0 6px 18px rgba(0,0,0,0.32);
+    }
+
+    .hero-body {
+        font-size: 18px;
+        font-weight: 500;
+        color: #e6ebf5;
+        margin: 0 auto;
+        max-width: 640px;
+        line-height: 1.6;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.28);
     }
 
     /* Input page header */
     .input-header {
-        background: #0F1826;
-        color: white;
-        padding: 20px;
+        background: transparent;
+        color: #0F1826;
+        padding: 10px 0 12px 0;
         text-align: center;
         margin-bottom: 30px;
     }
@@ -114,6 +142,28 @@ st.markdown(
         font-size: 36px;
         font-weight: 900;
         letter-spacing: 1.5px;
+        color: inherit;
+    }
+
+    /* Input cards */
+    .input-card {
+        background: white;
+        border: 3px solid #0F1826;
+        border-radius: 12px;
+        padding: 30px;
+        min-height: 50px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .input-card h3 {
+        margin-top: 0;
+        color: #0F1826;
+        font-weight: 800;
+    }
+    .input-card p {
+        margin-bottom: 0;
+        color: #0F1826;
     }
 
     /* Remove default column padding to make room for our boxes */
@@ -123,15 +173,11 @@ st.markdown(
 
     /* Results section */
     .results-divider {
-        background: repeating-linear-gradient(
-            45deg,
-            #0F1826,
-            #0F1826 10px,
-            #F8F8F8 10px,
-            #F8F8F8 20px
-        );
-        height: 10px;
+        background: #d4d9e1;
+        height: 2px;
+        width: 100%;
         margin: 40px 0 30px 0;
+        border-radius: 999px;
     }
 
     /* Output page sidebar */
@@ -155,23 +201,70 @@ st.markdown(
     }
 
     /* Button styling */
-    .stButton > button {
+    /* Pill buttons in a blue Apple-like style */
+    .stButton > button,
+    .stDownloadButton > button,
+    [data-testid="baseButton-primary"],
+    [data-testid="baseButton-secondary"] {
         width: 100%;
-        background: #0F1826;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 6px;
+        border-radius: 999px !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        padding: 14px 28px !important;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
     }
 
-    .stButton > button:hover {
-        background: #1a2a3a;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    /* Filled primary */
+    [data-testid="baseButton-primary"] {
+        background: #ff5fa2 !important;
+        border: 2px solid #ff5fa2 !important;
+        color: #ffffff !important;
+        box-shadow: 0 8px 22px rgba(255, 95, 162, 0.25);
+    }
+    [data-testid="baseButton-primary"]:hover {
+        filter: brightness(1.05);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 26px rgba(255, 95, 162, 0.28);
+    }
+    [data-testid="baseButton-primary"]:active {
+        filter: brightness(0.97);
+        transform: translateY(0);
+        box-shadow: 0 6px 18px rgba(255, 95, 162, 0.22);
+    }
+
+    /* Outline / secondary */
+    [data-testid="baseButton-secondary"] {
+        background: #ffffff !important;
+        color: #ff5fa2 !important;
+        border: 2px solid #ff5fa2 !important;
+        box-shadow: 0 6px 18px rgba(255, 95, 162, 0.12);
+    }
+    [data-testid="baseButton-secondary"]:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(255, 95, 162, 0.18);
+    }
+    [data-testid="baseButton-secondary"]:active {
+        transform: translateY(0);
+        box-shadow: 0 6px 16px rgba(255, 95, 162, 0.15);
+    }
+
+    /* Download button matches primary filled style */
+    .stDownloadButton > button {
+        background: #ff5fa2 !important;
+        border: 2px solid #ff5fa2 !important;
+        color: #ffffff !important;
+        box-shadow: 0 8px 22px rgba(255, 95, 162, 0.25);
+    }
+    .stDownloadButton > button:hover {
+        filter: brightness(1.05);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 26px rgba(255, 95, 162, 0.28);
+    }
+    .stDownloadButton > button:active {
+        filter: brightness(0.97);
+        transform: translateY(0);
+        box-shadow: 0 6px 18px rgba(255, 95, 162, 0.22);
     }
 
     /* Tab styling - increase font size */
@@ -194,6 +287,131 @@ st.markdown(
     .stRadio label {
         font-size: 32px !important;
         font-weight: 700 !important;
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+        .stApp {
+            background: #0b0f16;
+            color: #f4f6fb;
+        }
+        .landing-container {
+            color: #f4f6fb;
+        }
+        .input-header {
+            color: #f4f6fb;
+        }
+        .input-card {
+            background: #121926;
+            border-color: #2b3a52;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+        }
+        .input-card h3,
+        .input-card p {
+            color: #f4f6fb;
+        }
+        .results-divider {
+            background: #2b3a52;
+        }
+        .stats-header {
+            color: #f4f6fb;
+        }
+        .map-container {
+            background: #0f1620;
+            border-radius: 12px;
+        }
+        .output-sidebar {
+            color: #f4f6fb;
+        }
+        .hero-text, .hero-subtext, .hero-body {
+            color: #f4f6fb;
+        }
+
+        /* General text */
+        .stMarkdown, .stText, .stCaption, .stMetric {
+            color: #f4f6fb !important;
+        }
+
+        /* Form controls */
+        input, textarea, select {
+            background-color: #121926 !important;
+            color: #f4f6fb !important;
+            border: 2px solid #1f2a3c !important;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: #ff5fa2 !important;
+            box-shadow: 0 0 0 2px rgba(255, 95, 162, 0.35) !important;
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: #cfd5e3 !important;
+        }
+
+        /* File uploader */
+        [data-testid="stFileUploader"] section {
+            background: #121926 !important;
+            border: 2px dashed #2b3a52 !important;
+            color: #f4f6fb !important;
+        }
+        [data-testid="stFileUploader"] label,
+        [data-testid="stFileUploader"] p,
+        [data-testid="stFileUploader"] small,
+        [data-testid="stFileUploader"] span,
+        [data-testid="stFileUploader"] div {
+            color: #f4f6fb !important;
+        }
+        [data-testid="stFileUploader"] * {
+            color: #f4f6fb !important;
+        }
+        [data-testid="stFileUploaderDropzone"],
+        [data-testid="stFileUploaderDropzone"] * {
+            color: #f4f6fb !important;
+        }
+        [data-testid="stFileUploader"] button {
+            background: #1b2433 !important;
+            color: #f4f6fb !important;
+            border: 1px solid #2b3a52 !important;
+        }
+        [data-testid="stFileUploader"] button:hover {
+            background: #222d3f !important;
+            border-color: #ff5fa2 !important;
+        }
+
+        /* Checkboxes and radio labels */
+        .stCheckbox label, .stRadio label,
+        [data-testid="stCheckbox"] label,
+        [data-testid="stCheckbox"] p,
+        [data-testid="stCheckbox"] span,
+        [data-testid="stCheckbox"] * {
+            color: #f4f6fb !important;
+        }
+
+        /* Selectbox text */
+        [data-baseweb="select"] {
+            background: #121926 !important;
+            color: #f4f6fb !important;
+            border: 2px solid #1f2a3c !important;
+        }
+        [data-baseweb="select"] * {
+            color: #f4f6fb !important;
+        }
+        [data-testid="stSelectbox"] div[role="combobox"] {
+            background: #121926 !important;
+            color: #f4f6fb !important;
+            border: 2px solid #1f2a3c !important;
+        }
+        [data-testid="stSelectbox"] svg {
+            fill: #f4f6fb !important;
+            color: #f4f6fb !important;
+        }
+        [data-testid="stSelectbox"] * {
+            color: #f4f6fb !important;
+        }
+
+        /* Logo */
+        .faf-logo {
+            color: #f4f6fb !important;
+        }
     }
     </style>
     """,
@@ -274,26 +492,27 @@ if st.session_state.page == "landing":
     st.markdown('<div class="faf-logo">FAF</div>', unsafe_allow_html=True)
     st.markdown('<div class="landing-container">', unsafe_allow_html=True)
 
-    # Hero section with overlay
-    st.markdown('<div class="hero-section">', unsafe_allow_html=True)
+    # Build inline background style to ensure the image loads in CSS
+    if HERO_BG_BASE64:
+        hero_bg_style = f"background: linear-gradient(120deg, rgba(0,0,0,0.38), rgba(0,0,0,0.20)), url('data:image/jpeg;base64,{HERO_BG_BASE64}');"
+    else:
+        hero_bg_style = "background: linear-gradient(120deg, rgba(0,0,0,0.38), rgba(0,0,0,0.20));"
 
-    # Hero image
-    st.image("assets/marin-journal-piece-lead-2-1920x900.jpg", use_container_width=True)
-
-    # Overlay content
-    st.markdown("""
-        <div class="hero-overlay">
-            <div class="hero-text">UPLOAD A GPX FILE OR DESCRIBE YOUR IDEAL ROUTE</div>
-            <div class="hero-subtext">We'll find similar routes and suggest something new to try</div>
+    # Hero section with background image and centered overlay
+    st.markdown(f"""
+        <div class="hero-section" style="{hero_bg_style}">
+            <div class="hero-overlay">
+                <div class="hero-text">Explore faster.</div>
+                <div class="hero-subtext">Fast as f***</div>
+                <div class="hero-body">"Discovery should be fun, not complicated."</div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
 
     # Get Started button below image
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        if st.button("🚴 GET STARTED", type="primary", use_container_width=True):
+        if st.button("Let it whip !", type="primary", use_container_width=True):
             st.session_state.page = "input"
             st.rerun()
 
@@ -309,6 +528,7 @@ elif st.session_state.page == "input":
         '<div class="input-header"><h1>What are you looking for?</h1></div>',
         unsafe_allow_html=True
     )
+    st.markdown('<div class="results-divider"></div>', unsafe_allow_html=True)
 
     # Main input area - two columns with styled containers
     col1, col2 = st.columns(2, gap="large")
@@ -316,16 +536,8 @@ elif st.session_state.page == "input":
     with col1:
         # Create a visual box using HTML
         st.markdown("""
-            <div style="
-                background: white;
-                border: 3px solid #0F1826;
-                border-radius: 12px;
-                padding: 30px;
-                min-height: 50px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                margin-bottom: 20px;
-            ">
-                <h3 style="margin-top: 0; color: #0F1826; font-weight: 800;">📤 UPLOAD</h3>
+            <div class="input-card">
+                <h3>📤 UPLOAD</h3>
                 <p>Upload your GPX file to find similar routes</p>
             </div>
         """, unsafe_allow_html=True)
@@ -345,16 +557,8 @@ elif st.session_state.page == "input":
     with col2:
         # Create a visual box using HTML
         st.markdown("""
-            <div style="
-                background: white;
-                border: 3px solid #0F1826;
-                border-radius: 12px;
-                padding: 30px;
-                min-height: 50px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                margin-bottom: 20px;
-            ">
-                <h3 style="margin-top: 0; color: #0F1826; font-weight: 800;">💬 TELL US</h3>
+            <div class="input-card">
+                <h3>💬 TELL US</h3>
                 <p>Describe your ideal route in your own words</p>
             </div>
         """, unsafe_allow_html=True)
@@ -375,7 +579,7 @@ elif st.session_state.page == "input":
     st.markdown("###")
     col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
     with col_btn2:
-        if st.button("🚀 GO!", type="primary", use_container_width=True):
+        if st.button("GO!", type="primary", use_container_width=True):
             # Validate input
             if use_gpx and uploaded_file:
                 with st.spinner("Processing GPX file..."):
@@ -544,7 +748,6 @@ elif st.session_state.page == "input":
 
         with map_col:
             st.markdown('<div class="map-container">', unsafe_allow_html=True)
-            st.markdown("### MAP")
 
             if selected:
                 route_id = selected['route_id']
@@ -567,3 +770,4 @@ elif st.session_state.page == "input":
                 st.info("Select a route to view map")
 
             st.markdown('</div>', unsafe_allow_html=True)
+# bye 
