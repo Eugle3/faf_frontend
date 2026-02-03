@@ -503,7 +503,6 @@ if st.session_state.page == "landing":
         <div class="hero-section" style="{hero_bg_style}">
             <div class="hero-overlay">
                 <div class="hero-text">Explore faster.</div>
-                <div class="hero-subtext">Fast as f***</div>
                 <div class="hero-body">"Discovery should be fun, not complicated."</div>
             </div>
         </div>
